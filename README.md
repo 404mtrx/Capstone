@@ -1,12 +1,12 @@
-# Capstone Project Name
+# DesiBoyzz 
 
 
-# Team member
+## Team member
 
-               #Satya Pun Magar
-               #Kritika Thapa Magar
-               #Matrika Timilsaina
-               #Aayan Nisar Zafar
+               1.Satya Pun Magar
+               2.Kritika Thapa Magar
+               3.Matrika Timilsaina
+               4.Aayan Nisar Zafar
 
-# Description
+## Description
  
