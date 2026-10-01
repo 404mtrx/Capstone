@@ -10,7 +10,7 @@
                4.Aayan Nisar Zafar
 
 ## Description
-SentinelWatch, a lightweight, self-hosted security platform that unifies three cyber blue-team capabilities into one product. SentinelWatch
+SentinelWatch is a lightweight, self-hosted security platform that combines three core blue-team capabilities into one product:
 
 (1) Collects and normalizes security logs from common sources into a consistent format for centralized storage and analysis.
 
