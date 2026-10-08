@@ -39,3 +39,21 @@ hostname,
 protocol,
 event_id,
 process_name
+
+
+## Planned Detection Rules
+
+SentinelWatch will include approximately 10–15 rule-based detections, including:
+
+(1). Multiple Failed Logins
+(2). Successful Login After Multiple Failures
+(3). Password Spraying
+(4). Port Scan
+(5). Repeated Blocked Connections
+(6). High-Severity Event
+(7). Account Lockout
+(8). Privilege Change
+(9). Suspicious Remote Login
+(10). Repeated Access to Sensitive Ports
+(11). Suspicious Activity From Same Source IP
+(12). Repeated Authentication Across Hosts
