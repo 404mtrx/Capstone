@@ -41,14 +41,19 @@ event_id,
 process_name
 
 
-## Sensitive Data
+## Planned Detection Rules
 
-SentinelWatch may process and store sensitive security information:
+SentinelWatch will include approximately 10–15 rule-based detections, including:
 
-(1). Usernames and account information
-(2). Source and destination IP addresses
-(3). Authentication events
-(4). Security logs and normalized event data
-(5). Alert details
-(6). Case and investigation notes
-(7). User roles and access permissions
+(1). Multiple Failed Logins
+(2). Successful Login After Multiple Failures
+(3). Password Spraying
+(4). Port Scan
+(5). Repeated Blocked Connections
+(6). High-Severity Event
+(7). Account Lockout
+(8). Privilege Change
+(9). Suspicious Remote Login
+(10). Repeated Access to Sensitive Ports
+(11). Suspicious Activity From Same Source IP
+(12). Repeated Authentication Across Hosts
