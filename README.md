@@ -34,8 +34,8 @@ We will use one flat common normalized event schema across the project. Differen
 }
 
 These are the initial 9 core fields. If a future log source or detection rule needs additional information, we can extend the same schema with optional fields:
-destination_port
-hostname
-protocol
-event_id
+destination_port,
+hostname,
+protocol,
+event_id,
 process_name
