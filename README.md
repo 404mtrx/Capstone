@@ -39,3 +39,16 @@ hostname,
 protocol,
 event_id,
 process_name
+
+
+## Sensitive Data
+
+SentinelWatch may process and store sensitive security information, including:
+
+(1). Usernames and account information
+(2). Source and destination IP addresses
+(3). Authentication events
+(4). Security logs and normalized event data
+(5). Alert details
+(6). Case and investigation notes
+(7). User roles and access permissions
