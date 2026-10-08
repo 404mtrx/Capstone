@@ -17,3 +17,25 @@ SentinelWatch is a lightweight, self-hosted security platform that combines thre
 (2) Applies rule-based detection and correlation to security events to identify suspicious activity and generate alerts.
 
 (3) Presents security activity and alerts through a centralized SOC Dashboard that allows analysts to monitor events, review alerts, and perform basic case investigation.
+
+
+## SentinelWatch Common Security Event Schema
+We will use one flat common normalized event schema across the project. Different log sources will be converted into this same structure.
+{
+  "timestamp": "...",
+  "source": "...",
+  "event_type": "...",
+  "username": "...",
+  "source_ip": "...",
+  "destination_ip": "...",
+  "action": "...",
+  "severity": "...",
+  "message": "..."
+}
+
+These are the initial 9 core fields. If a future log source or detection rule needs additional information, we can extend the same schema with optional fields:
+destination_port
+hostname
+protocol
+event_id
+process_name
