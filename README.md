@@ -39,3 +39,15 @@ hostname,
 protocol,
 event_id,
 process_name
+
+##critical-assets
+(1). User accounts and authentication data
+(2). Host systems / endpoints
+(3). Security logs and normalized event data
+(4). Network services and connections
+(5). Alerts and investigation/case records
+(6). SentinelWatch backend and API
+(7). PostgreSQL database
+(8). OpenSearch event storage
+(9). Detection rules and correlation logic
+(10). Dashboard and user access/RBAC data
