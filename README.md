@@ -43,7 +43,7 @@ process_name
 
 ## Sensitive Data
 
-SentinelWatch may process and store sensitive security information, including:
+SentinelWatch may process and store sensitive security information:
 
 (1). Usernames and account information
 (2). Source and destination IP addresses
