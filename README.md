@@ -52,3 +52,13 @@ SentinelWatch may process and store sensitive security information, including:
 (5). Alert details
 (6). Case and investigation notes
 (7). User roles and access permissions
+
+## Logging Requirements
+(1). Support 2–3 initial log sources
+(2). Collect authentication and security-related events
+(3). Preserve the original message
+(4). Extract important fields such as timestamp, username, source IP, destination IP, and event type
+(5). Normalize logs into the common event schema
+(6). Store normalized events in OpenSearch
+(7). Make events searchable and available to the detection engine
+(8). Handle missing optional fields using null
