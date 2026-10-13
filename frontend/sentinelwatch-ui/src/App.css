@@ -1,0 +1,417 @@
+
+* {
+  box-sizing: border-box;
+}
+
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f4f7fb;
+}
+
+.sidebar {
+  width: 255px;
+  min-width: 255px;
+  background: #ffffff;
+  border-right: 1px solid #e2e8f0;
+  padding: 26px 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 45px;
+}
+
+.logo h2 {
+  font-size: 19px;
+  margin: 0;
+  color: #14243a;
+}
+
+.logo span {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.menu-label {
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 700;
+  padding-left: 12px;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  padding: 13px 14px;
+  margin: 5px 0;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #64748b;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.menu-item:hover {
+  background: #f1f5f9;
+}
+
+.menu-item.selected {
+  background: #eff6ff;
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: 15px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.online-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: #22c55e;
+  border-radius: 50%;
+  margin-right: 7px;
+}
+
+.main-content {
+  flex: 1;
+  min-width: 0;
+  padding: 35px;
+}
+
+.top-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.top-header h1 {
+  font-size: 28px;
+  color: #14243a;
+  margin: 0 0 8px;
+}
+
+.top-header p {
+  color: #64748b;
+  margin: 0;
+}
+
+.demo-badge {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border-radius: 20px;
+  padding: 8px 14px;
+  font-size: 12px;
+}
+
+.welcome-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  padding: 26px;
+  border-radius: 14px;
+  margin-bottom: 24px;
+}
+
+.welcome-card h2 {
+  margin: 0 0 10px;
+  color: #14243a;
+}
+
+.welcome-card p {
+  color: #64748b;
+  margin: 0;
+}
+
+.threat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.threat-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 22px;
+  border-top: 4px solid;
+}
+
+.threat-card span {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.threat-card h2 {
+  font-size: 36px;
+  margin: 15px 0 8px;
+}
+
+.threat-card p {
+  color: #94a3b8;
+  font-size: 12px;
+  margin: 0;
+}
+
+.critical {
+  border-top-color: #dc2626;
+  color: #dc2626;
+}
+
+.high {
+  border-top-color: #ea580c;
+  color: #ea580c;
+}
+
+.medium {
+  border-top-color: #eab308;
+  color: #a16207;
+}
+
+.low {
+  border-top-color: #16a34a;
+  color: #16a34a;
+}
+
+.alerts-panel {
+  background: white;
+  padding: 26px;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+}
+
+.alerts-panel h2 {
+  margin: 0 0 8px;
+  color: #14243a;
+}
+
+.alerts-panel > p {
+  color: #64748b;
+  margin-bottom: 25px;
+}
+
+.alert-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 0;
+  border-top: 1px solid #e2e8f0;
+}
+
+.alert-row strong {
+  color: #14243a;
+}
+
+.alert-row p {
+  color: #64748b;
+  font-size: 13px;
+  margin: 7px 0 0;
+}
+
+.alert-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.critical-badge {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.high-badge {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+@media (max-width: 1000px) {
+  .threat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 650px) {
+  .app-layout {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .main-content {
+    padding: 20px;
+  }
+
+  .threat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .top-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+/* SentinelWatch Dark Theme */
+
+body,
+.app-layout {
+  background: #0b1120;
+  color: #e2e8f0;
+}
+
+.sidebar {
+  background: #111827;
+  border-right: 1px solid #263244;
+}
+
+.logo h2,
+.top-header h1,
+.welcome-card h2,
+.alerts-panel h2,
+.alert-row strong {
+  color: #f8fafc;
+}
+
+.logo span,
+.top-header p,
+.welcome-card p,
+.alerts-panel > p,
+.alert-row p,
+.threat-card span {
+  color: #94a3b8;
+}
+
+.menu-item {
+  color: #94a3b8;
+}
+
+.menu-item:hover {
+  background: #1e293b;
+}
+
+.menu-item.selected {
+  background: #1e3a5f;
+  color: #60a5fa;
+}
+
+.welcome-card,
+.threat-card,
+.alerts-panel {
+  background: #151e2e;
+  border-color: #293548;
+}
+
+.threat-card.critical {
+  border-top-color: #ef4444;
+  color: #f87171;
+}
+
+.threat-card.high {
+  border-top-color: #f97316;
+  color: #fb923c;
+}
+
+.threat-card.medium {
+  border-top-color: #eab308;
+  color: #facc15;
+}
+
+.threat-card.low {
+  border-top-color: #22c55e;
+  color: #4ade80;
+}
+
+.threat-card p,
+.menu-label {
+  color: #94a3b8;
+}
+
+.alert-row {
+  border-top-color: #293548;
+}
+
+.demo-badge {
+  background: #1e3a5f;
+  color: #93c5fd;
+}
+/* Alerts sidebar notification */
+
+.app-layout .menu-item .alerts-label {
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.app-layout .menu-item .alerts-counter {
+  margin-left: auto;
+  background-color: #dc2626;
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 7px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-layout.theme-light .menu-item .alerts-label {
+  color: #b91c1c;
+}
+
+
+/* SentinelWatch Logout Button */
+
+.demo-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logout-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  margin-top: 14px;
+  padding: 12px 16px;
+  border: 1px solid #475569;
+  border-radius: 9px;
+  background: #1e293b;
+  color: #f8fafc;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.logout-button:hover {
+  background: #334155;
+}
+
+.logout-button:focus-visible {
+  outline: 2px solid #60a5fa;
+  outline-offset: 2px;
+}
