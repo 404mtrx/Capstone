@@ -1,0 +1,10 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: sentinelwatch-postgres
+    environment:
+      POSTGRES_USER: sentinel
+      POSTGRES_PASSWORD: sentinel_dev_pw
+      POSTGRES_DB: sentinelwatch
+    ports:
+      - "5432:5432"
