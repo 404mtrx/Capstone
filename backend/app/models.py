@@ -39,3 +39,17 @@ class Alert(SQLModel, table=True):
     evidence: Optional[dict] = Field(default=None, sa_column=Column(JSON))
     assigned_to: Optional[int] = Field(default=None, foreign_key="user.id")
     created_at: datetime = Field(default_factory=utcnow, index=True)
+
+
+CASE_STATUSES = ("open", "investigating", "contained", "closed")
+
+
+class Case(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    alert_id: int = Field(foreign_key="alert.id", index=True)
+    title: str
+    status: str = Field(default="open", index=True)
+    notes: Optional[str] = None
+    owner_id: Optional[int] = Field(default=None, foreign_key="user.id")
+    opened_at: datetime = Field(default_factory=utcnow)
+    closed_at: Optional[datetime] = None
