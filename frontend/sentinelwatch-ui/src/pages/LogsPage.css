@@ -1,0 +1,158 @@
+
+.logs-page {
+  color: inherit;
+}
+
+.logs-heading,
+.logs-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.logs-heading h2 {
+  font-size: 23px;
+  margin: 0 0 8px;
+}
+
+.logs-heading p {
+  margin: 0;
+  color: #94a3b8;
+}
+
+.logs-heading svg {
+  color: #60a5fa;
+}
+
+.logs-toolbar {
+  margin: 26px 0 20px;
+  flex-wrap: wrap;
+}
+
+.logs-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 220px;
+  padding: 11px 14px;
+  border: 1px solid #334155;
+  border-radius: 9px;
+  background: #1e293b;
+}
+
+.logs-search input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: inherit;
+  width: 100%;
+}
+
+.logs-toolbar select {
+  padding: 11px 14px;
+  border: 1px solid #334155;
+  border-radius: 9px;
+  background: #1e293b;
+  color: #f8fafc;
+}
+
+.logs-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.security-logs-table {
+  width: 100%;
+  min-width: 850px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.security-logs-table th,
+.security-logs-table td {
+  padding: 17px 14px;
+  border-bottom: 1px solid #334155;
+  font-size: 13px;
+}
+
+.security-logs-table th {
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.security-logs-table td:first-child,
+.security-logs-table td:last-child {
+  white-space: nowrap;
+}
+
+.log-level {
+  display: inline-block;
+  padding: 6px 11px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.log-level.info {
+  color: #93c5fd;
+  background: #172554;
+}
+
+.log-level.warning {
+  color: #facc15;
+  background: #422006;
+}
+
+.log-level.error {
+  color: #f87171;
+  background: #450a0a;
+}
+
+.logs-empty {
+  padding: 25px;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.logs-footer {
+  margin-top: 18px;
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+/* Light theme */
+
+.theme-light .logs-heading p,
+.theme-light .security-logs-table th,
+.theme-light .logs-footer {
+  color: #64748b;
+}
+
+.theme-light .logs-search,
+.theme-light .logs-toolbar select {
+  background: #f8fafc;
+  color: #14243a;
+  border-color: #cbd5e1;
+}
+
+.theme-light .security-logs-table th,
+.theme-light .security-logs-table td {
+  border-bottom-color: #e2e8f0;
+}
+
+.theme-light .log-level.info {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.theme-light .log-level.warning {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.theme-light .log-level.error {
+  background: #fee2e2;
+  color: #b91c1c;
+}

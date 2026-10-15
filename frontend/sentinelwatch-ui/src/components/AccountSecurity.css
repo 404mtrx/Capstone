@@ -1,0 +1,156 @@
+
+.account-security {
+  margin-top: 30px;
+  padding: 25px;
+  background: #151e2e;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  color: #f8fafc;
+}
+
+.security-section-heading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.security-section-heading svg {
+  color: #60a5fa;
+}
+
+.security-section-heading h2 {
+  margin: 0 0 6px;
+  font-size: 20px;
+}
+
+.security-section-heading p,
+.security-setting-info p {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.security-setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 22px 0;
+  border-top: 1px solid #334155;
+}
+
+.security-setting-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.security-setting-info > svg {
+  flex-shrink: 0;
+  color: #94a3b8;
+}
+
+.security-setting-info h3 {
+  margin: 0 0 7px;
+  font-size: 15px;
+}
+
+.security-action-button,
+.security-primary-button {
+  border: 1px solid #475569;
+  border-radius: 9px;
+  padding: 11px 15px;
+  background: #1e293b;
+  color: #f8fafc;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.security-action-button:hover {
+  background: #334155;
+}
+
+.security-primary-button {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+.security-status {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 5px 10px;
+  border-radius: 7px;
+  background: #422006;
+  color: #facc15;
+  font-size: 12px;
+}
+
+.password-change-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+  background: #0f172a;
+  border-radius: 10px;
+}
+
+.password-change-form label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.password-change-form input {
+  padding: 12px;
+  border: 1px solid #475569;
+  border-radius: 8px;
+  background: #1e293b;
+  color: #f8fafc;
+}
+
+.security-helper,
+.security-message,
+.mfa-information p {
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.mfa-information {
+  padding: 20px;
+  background: #0f172a;
+  border-radius: 10px;
+}
+
+.mfa-information h3 {
+  margin-top: 0;
+}
+
+.theme-light .account-security {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  color: #14243a;
+}
+
+.theme-light .security-setting-row {
+  border-color: #e2e8f0;
+}
+
+.theme-light .security-action-button,
+.theme-light .password-change-form,
+.theme-light .mfa-information {
+  background: #f1f5f9;
+  color: #14243a;
+}
+
+.theme-light .password-change-form input {
+  background: #ffffff;
+  color: #14243a;
+  border-color: #cbd5e1;
+}
+
+@media (max-width: 600px) {
+  .security-setting-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

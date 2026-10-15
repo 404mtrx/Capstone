@@ -1,0 +1,130 @@
+
+:root {
+  font-family: Inter, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: #f4f7fb;
+  color: #14243a;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+/* ===================================
+   SENTINELWATCH THEME 
+   =================================== */
+
+/* Dark Navy */
+.app-layout.theme-dark {
+  background: #0b1120;
+  color: #f8fafc;
+}
+
+.app-layout.theme-dark .sidebar {
+  background: #111827;
+}
+
+.app-layout.theme-dark .welcome-card,
+.app-layout.theme-dark .alerts-panel,
+.app-layout.theme-dark .threat-card {
+  background: #151e2e;
+  border-color: #293548;
+}
+
+/* Clean White */
+.app-layout.theme-light {
+  background: #f4f7fb;
+  color: #14243a;
+}
+
+.app-layout.theme-light .sidebar {
+  background: #ffffff;
+  border-right-color: #e2e8f0;
+}
+
+.app-layout.theme-light .welcome-card,
+.app-layout.theme-light .alerts-panel,
+.app-layout.theme-light .threat-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+
+/* Light theme text */
+.app-layout.theme-light .top-header h1,
+.app-layout.theme-light .logo h2,
+.app-layout.theme-light .welcome-card h2,
+.app-layout.theme-light .alerts-panel h2,
+.app-layout.theme-light .alert-row strong,
+.app-layout.theme-light .theme-setting h3 {
+  color: #14243a;
+}
+
+/* Dark theme text */
+.app-layout.theme-dark .top-header h1,
+.app-layout.theme-dark .logo h2,
+.app-layout.theme-dark .welcome-card h2,
+.app-layout.theme-dark .alerts-panel h2,
+.app-layout.theme-dark .alert-row strong,
+.app-layout.theme-dark .theme-setting h3 {
+  color: #f8fafc;
+}
+
+/* Theme buttons */
+.app-layout .theme-options {
+  display: flex;
+  gap: 12px;
+  margin-top: 15px;
+}
+
+.app-layout .theme-option {
+  padding: 12px 22px;
+  border: 1px solid #475569;
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.app-layout .theme-option:hover {
+  border-color: #3b82f6;
+}
+
+.app-layout .theme-option.theme-option-active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+}
+
+/* Preserve severity colors */
+.app-layout .threat-card.critical {
+  border-top-color: #ef4444;
+}
+
+.app-layout .threat-card.high {
+  border-top-color: #f97316;
+}
+
+.app-layout .threat-card.medium {
+  border-top-color: #eab308;
+}
+
+.app-layout .threat-card.low {
+  border-top-color: #22c55e;
+}
