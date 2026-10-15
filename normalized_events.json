@@ -2,7 +2,7 @@
     {
         "timestamp": "2026-10-08T14:30:00Z",
         "source": "linux",
-        "event_type": "authentication_failure",
+        "event_type": "failed_login",
         "username": "admin",
         "source_ip": "192.168.1.25",
         "destination_ip": null,
@@ -13,7 +13,7 @@
     {
         "timestamp": "2026-10-08T14:31:00Z",
         "source": "linux",
-        "event_type": "authentication_failure",
+        "event_type": "failed_login",
         "username": "root",
         "source_ip": "192.168.1.30",
         "destination_ip": null,

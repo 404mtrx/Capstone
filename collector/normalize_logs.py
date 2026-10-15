@@ -30,7 +30,7 @@ def normalize_log(log):
     return {
         "timestamp": timestamp,
         "source": "linux",
-        "event_type": "authentication_failure" if failed else "authentication_success",
+        "event_type": "failed_login" if failed else "authentication_success",
         "username": username,
         "source_ip": ip,
         "destination_ip": None,
