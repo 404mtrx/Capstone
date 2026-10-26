@@ -23,3 +23,20 @@ class AlertCreate(BaseModel):
 class AlertUpdate(BaseModel):
     status: Optional[AlertStatus] = None
     assigned_to: Optional[int] = None  # send null to unassign
+
+
+CaseStatus = Literal["open", "investigating", "contained", "closed"]
+
+
+class CaseCreate(BaseModel):
+    alert_id: int
+    title: str
+    notes: Optional[str] = None
+    owner_id: Optional[int] = None
+
+
+class CaseUpdate(BaseModel):
+    title: Optional[str] = None
+    status: Optional[CaseStatus] = None
+    notes: Optional[str] = None
+    owner_id: Optional[int] = None  # send null to remove the owner
