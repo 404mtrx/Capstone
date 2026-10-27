@@ -8,7 +8,9 @@
         "destination_ip": null,
         "action": "failure",
         "severity": "medium",
-        "message": "Oct  8 14:30:00 ubuntu sshd[1234]: Failed password for admin from 192.168.1.25 port 52341 ssh2"
+        "message": "Oct  8 14:30:00 ubuntu sshd[1234]: Failed password for admin from 192.168.1.25 port 52341 ssh2",
+        "hostname": "ubuntu",
+        "process_name": "sshd"
     },
     {
         "timestamp": "2026-10-08T14:31:00Z",
@@ -19,7 +21,9 @@
         "destination_ip": null,
         "action": "failure",
         "severity": "medium",
-        "message": "Oct  8 14:31:00 ubuntu sshd[1235]: Failed password for root from 192.168.1.30 port 52342 ssh2"
+        "message": "Oct  8 14:31:00 ubuntu sshd[1235]: Failed password for root from 192.168.1.30 port 52342 ssh2",
+        "hostname": "ubuntu",
+        "process_name": "sshd"
     },
     {
         "timestamp": "2026-10-08T14:32:00Z",
@@ -30,6 +34,8 @@
         "destination_ip": null,
         "action": "success",
         "severity": "low",
-        "message": "Oct  8 14:32:00 ubuntu sshd[1236]: Accepted password for student from 192.168.1.40 port 52343 ssh2"
+        "message": "Oct  8 14:32:00 ubuntu sshd[1236]: Accepted password for student from 192.168.1.40 port 52343 ssh2",
+        "hostname": "ubuntu",
+        "process_name": "sshd"
     }
 ]
