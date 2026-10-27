@@ -1,0 +1,24 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.7, pytest-9.1.1, pluggy-1.7.0 -- /Users/kritikathapamagar/CSCE4907/Capstone/backend/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/kritikathapamagar/CSCE4907/Capstone
+plugins: anyio-4.15.1
+collecting ... collected 15 items
+
+tests/test_normalizer.py::test_failed_password PASSED                    [  6%]
+tests/test_normalizer.py::test_accepted_password PASSED                  [ 13%]
+tests/test_normalizer.py::test_timestamp_is_iso_utc PASSED               [ 20%]
+tests/test_normalizer.py::test_single_digit_day_and_hour PASSED          [ 26%]
+tests/test_normalizer.py::test_unrecognized_line_returns_none PASSED     [ 33%]
+tests/test_normalizer.py::test_failed_password_for_invalid_user PASSED   [ 40%]
+tests/test_normalizer.py::test_accepted_publickey PASSED                 [ 46%]
+tests/test_normalizer.py::test_invalid_user_notice_is_not_double_counted PASSED [ 53%]
+tests/test_normalizer.py::test_year_comes_from_current_date PASSED       [ 60%]
+tests/test_normalizer.py::test_december_log_read_in_january_uses_previous_year PASSED [ 66%]
+tests/test_normalizer.py::test_ufw_block PASSED                          [ 73%]
+tests/test_normalizer.py::test_ufw_allow PASSED                          [ 80%]
+tests/test_normalizer.py::test_all_core_fields_present PASSED            [ 86%]
+tests/test_normalizer.py::test_auth_sample_three_lines_three_events PASSED [ 93%]
+tests/test_normalizer.py::test_ufw_sample_every_line_normalized PASSED   [100%]
+
+============================== 15 passed in 0.02s ==============================
