@@ -5,7 +5,24 @@ from sqlmodel import Session, SQLModel, create_engine
 
 from app import models
 from app.database import get_session
+from app.event_store import doc_id, get_event_store
 from app.main import app
+
+
+class FakeEventStore:
+    """In-memory stand-in for OpenSearch so tests don't need Docker."""
+
+    def __init__(self):
+        self.docs = {}
+
+    def index_events(self, events):
+        for e in events:
+            self.docs[doc_id(e)] = e
+        return len(events)
+
+    def search(self, filters, size):
+        hits = [d for d in self.docs.values() if all(d.get(k) == v for k, v in filters.items())]
+        return hits[:size]
 
 
 @pytest.fixture
@@ -18,12 +35,18 @@ def engine():
 
 
 @pytest.fixture
-def client(engine):
+def store():
+    return FakeEventStore()
+
+
+@pytest.fixture
+def client(engine, store):
     def override_session():
         with Session(engine) as session:
             yield session
 
     app.dependency_overrides[get_session] = override_session
+    app.dependency_overrides[get_event_store] = lambda: store
     yield TestClient(app)
     app.dependency_overrides.clear()
 
