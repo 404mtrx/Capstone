@@ -1,0 +1,75 @@
+=== TC-API-01 health ===
+HTTP/1.1 200 OK
+date: Thu, 29 Oct 2026 21:22:47 GMT
+server: uvicorn
+content-length: 15
+content-type: application/json
+vary: Origin
+
+{"status":"ok"}
+
+=== TC-DB-01 containers ===
+NAME                       IMAGE                                 COMMAND                  SERVICE      CREATED          STATUS                    PORTS
+sentinelwatch-opensearch   opensearchproject/opensearch:2.17.1   "./opensearch-docker…"   opensearch   18 minutes ago   Up 3 minutes (healthy)    127.0.0.1:9200->9200/tcp
+sentinelwatch-postgres     postgres:16                           "docker-entrypoint.s…"   postgres     18 minutes ago   Up 18 minutes (healthy)   0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp
+
+=== TC-SEC-03 env files ===
+backend/.env.example
+
+=== EV-01 pytest ===
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+23 passed, 1 warning in 0.42s
+
+=== TC-API-11 dedup: resend then count ===
+Sending 15 events to http://127.0.0.1:8000/events
+OK: HTTP 201 {'indexed': 15}
+{"count":15,"_shards":{"total":1,"successful":1,"skipped":0,"failed":0}}
+
+=== create alert ===
+{"severity":"medium","source":null,"rule_name":"Failed Login Detected","username":null,"evidence":null,"created_at":"2026-10-29T21:22:49.576049Z","status":"new","id":1,"source_ip":"10.0.0.9","reason":"409 test","assigned_to":null}
+alert id = 1
+
+=== TC-API-05 illegal transition new->escalated (expect 409) ===
+HTTP/1.1 409 Conflict
+{"detail":"Cannot move alert from 'new' to 'escalated'"}
+
+=== TC-API-06 first case (expect 201) ===
+HTTP/1.1 201 Created
+{"status":"open","id":1,"owner_id":null,"opened_at":"2026-10-29T21:22:49.631308Z","notes":null,"alert_id":1,"title":"first case","closed_at":null}
+
+=== TC-API-08 second open case (expect 409) ===
+HTTP/1.1 409 Conflict
+{"detail":"Alert already has an open case (id 1)"}
+
+=== TC-API-07 case for missing alert (expect 404) ===
+HTTP/1.1 404 Not Found
+{"detail":"Alert not found"}
+
+=== TC-SEC-09 short password refused ===
+Password must be at least 12 characters.
+
+=== TC-SEC-01 argon2 hash stored ===
+Created analyst 'testanalyst'.
+  username   |  role   |              hash              
+-------------+---------+--------------------------------
+ testanalyst | analyst | $argon2id$v=19$m=65536,t=3,p=4
+(1 row)
+
+
+=== TC-API-13 OpenSearch down (expect 503) ===
+ Container sentinelwatch-opensearch Stopping 
+ Container sentinelwatch-opensearch Stopped 
+Sending 3 events to http://127.0.0.1:8000/events
+Failed: HTTP 503 {"detail":"OpenSearch unavailable: ConnectionError(HTTPConnection(host='localhost', port=9200): Failed to establish a new connection: [Errno 61] Connection refused) caused by: NewConnectionError(HTTPConnection(host='localhost', port=9200): Failed to establish a new connection: [Errno 61] Connection refused)"}
+ Container sentinelwatch-opensearch Starting 
+ Container sentinelwatch-opensearch Started 
+
+=== TC-DB-03 migration down/up (wipes data) ===
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade 87b54e0aab14 -> , create user alert case tables
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 87b54e0aab14, create user alert case tables
+
+ALL DONE
