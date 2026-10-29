@@ -29,3 +29,20 @@ Check it with `curl http://localhost:9200` once the container is healthy.
 
 - Create a user: `python -m app.create_user <username> --role admin` (run from `backend/`)
 - Run tests: `cd backend && pytest` (no Docker needed; uses in-memory SQLite and a fake event store)
+
+## Run the demo
+
+1. `docker compose up -d` and wait until `docker compose ps` shows both containers healthy.
+2. `cd backend && source .venv/bin/activate && alembic upgrade head && uvicorn app.main:app --reload`
+3. In a second terminal, from the repository root:
+   `python collector/normalize_logs.py` (creates `normalized_events.json`)
+4. Send the events (replace with Kritika's `send_events.py` when it exists):
+   `curl -X POST http://127.0.0.1:8000/events -H "Content-Type: application/json" -d @normalized_events.json`
+5. Search them: `curl "http://127.0.0.1:8000/events?event_type=failed_login"`
+6. Run the detection engine, then list alerts: `curl http://127.0.0.1:8000/alerts`
+7. Open a case: `curl -X POST http://127.0.0.1:8000/cases -H "Content-Type: application/json" -d '{"alert_id": 1, "title": "Investigate failed logins"}'`
+8. Start the dashboard: `cd frontend/sentinelwatch-ui && npm install && npm run dev`
+
+Error cases to show: a bad severity returns 422, an illegal status change returns 409,
+a second open case on the same alert returns 409, and `docker compose stop opensearch`
+makes `/events` return 503.
