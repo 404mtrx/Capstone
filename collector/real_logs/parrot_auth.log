@@ -1,0 +1,18 @@
+Nov 05 20:05:15 parrot sudo[1848]:     user : TTY=pts/0 ; PWD=/home/user ; USER=root ; COMMAND=/usr/bin/ls
+Nov 05 20:05:15 parrot sudo[1848]: pam_unix(sudo:session): session opened for user root(uid=0) by (uid=1000)
+Nov 05 20:05:15 parrot sudo[1848]: pam_unix(sudo:session): session closed for user root
+Nov 05 20:05:30 parrot sudo[1852]:     user : TTY=pts/0 ; PWD=/home/user ; USER=root ; COMMAND=/usr/sbin/useradd -m labtest
+Nov 05 20:05:30 parrot sudo[1852]: pam_unix(sudo:session): session opened for user root(uid=0) by (uid=1000)
+Nov 05 20:05:30 parrot useradd[1854]: new group: name=labtest, GID=1002
+Nov 05 20:05:30 parrot useradd[1854]: new user: name=labtest, UID=1002, GID=1002, home=/home/labtest, shell=/bin/sh, from=/dev/pts/1
+Nov 05 20:05:30 parrot sudo[1852]: pam_unix(sudo:session): session closed for user root
+Nov 05 20:05:52 parrot sudo[1862]:     user : TTY=pts/0 ; PWD=/home/user ; USER=root ; COMMAND=/usr/sbin/usermod -aG sudo labtest
+Nov 05 20:05:52 parrot sudo[1862]: pam_unix(sudo:session): session opened for user root(uid=0) by (uid=1000)
+Nov 05 20:05:52 parrot usermod[1864]: add 'labtest' to group 'sudo'
+Nov 05 20:05:52 parrot usermod[1864]: add 'labtest' to shadow group 'sudo'
+Nov 05 20:05:52 parrot sudo[1862]: pam_unix(sudo:session): session closed for user root
+Nov 05 20:06:02 parrot sudo[1872]:     user : TTY=pts/0 ; PWD=/home/user ; USER=root ; COMMAND=/usr/sbin/ufw status
+Nov 05 20:06:02 parrot sudo[1872]: pam_unix(sudo:session): session opened for user root(uid=0) by (uid=1000)
+Nov 05 20:06:02 parrot sudo[1872]: pam_unix(sudo:session): session closed for user root
+Nov 05 20:09:53 parrot sudo[1954]:     user : TTY=pts/0 ; PWD=/home/user ; USER=root ; COMMAND=/usr/bin/journalctl -o short --since -30min --no-pager _COMM=sudo _COMM=useradd _COMM=usermod
+Nov 05 20:09:53 parrot sudo[1954]: pam_unix(sudo:session): session opened for user root(uid=0) by (uid=1000)
