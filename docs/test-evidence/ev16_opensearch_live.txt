@@ -1,0 +1,8 @@
+Sending 15 events to http://127.0.0.1:8000/events
+OK: HTTP 201 {'indexed': 15}
+Sending 15 events to http://127.0.0.1:8000/events
+OK: HTTP 201 {'indexed': 15}
+15 events stored
+Watching 1 file(s); sending to http://127.0.0.1:8000/events. Press Ctrl+C to stop.
+Sent 14 events
+29 events stored
