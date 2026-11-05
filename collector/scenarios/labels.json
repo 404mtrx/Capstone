@@ -1,0 +1,43 @@
+{
+  "_about": "Ground truth for the demonstration scenarios. Each log is synthetic (lab-style) data. 'expected_alerts' are the rule names that must fire; 'attack' is false for the benign baseline, which must raise no alerts. Used by tests/test_scenarios.py and for evaluation (TC-EVAL-01, TC-EVAL-02).",
+  "brute_force.log": {
+    "attack": true,
+    "description": "8 failed SSH passwords for root from 203.0.113.10 in 1 minute",
+    "expected_alerts": ["Multiple Failed Logins"]
+  },
+  "account_compromise.log": {
+    "attack": true,
+    "description": "5 failed SSH passwords for admin from 198.51.100.23, then a successful login from the same IP",
+    "expected_alerts": ["Multiple Failed Logins", "Successful Login After Multiple Failures"]
+  },
+  "password_spraying.log": {
+    "attack": true,
+    "description": "One IP (192.0.2.44) tries 6 different usernames once each in 2 minutes",
+    "expected_alerts": ["Password Spraying Detected"]
+  },
+  "port_scan.log": {
+    "attack": true,
+    "description": "UFW blocks 14 connections from 203.0.113.77 to 14 different ports in 5 seconds",
+    "expected_alerts": ["Port Scan Detected", "Repeated Blocked Connections"]
+  },
+  "privilege_escalation.log": {
+    "attack": true,
+    "description": "Failed sudo, new account backup2 created, then added to the sudo group",
+    "expected_alerts": ["Privilege Change Detected"]
+  },
+  "account_lockout.log": {
+    "attack": true,
+    "description": "3 failed logins for maria, then pam_faillock locks the account (RFC 3339 timestamps)",
+    "expected_alerts": ["Account Lockout Detected"]
+  },
+  "web_attack.log": {
+    "attack": true,
+    "description": "Directory probing (404s), two SQL injection attempts and a path traversal from 198.51.100.200",
+    "expected_alerts": ["High Severity Event"]
+  },
+  "benign.log": {
+    "attack": false,
+    "description": "Normal logins, sudo use, allowed firewall traffic, a non-admin group change and normal web browsing",
+    "expected_alerts": []
+  }
+}

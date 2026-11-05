@@ -1,0 +1,7 @@
+Nov  5 13:20:04 web01 sudo:  student : 3 incorrect password attempts ; TTY=pts/1 ; PWD=/home/student ; USER=root ; COMMAND=/usr/bin/su
+Nov  5 13:22:40 web01 sudo:    admin : TTY=pts/2 ; PWD=/home/admin ; USER=root ; COMMAND=/usr/sbin/useradd -m backup2
+Nov  5 13:22:40 web01 useradd[5120]: new group: name=backup2, GID=1005
+Nov  5 13:22:40 web01 useradd[5120]: new user: name=backup2, UID=1005, GID=1005, home=/home/backup2, shell=/bin/bash, from=/dev/pts/2
+Nov  5 13:23:05 web01 sudo:    admin : TTY=pts/2 ; PWD=/home/admin ; USER=root ; COMMAND=/usr/sbin/usermod -aG sudo backup2
+Nov  5 13:23:05 web01 usermod[5131]: add 'backup2' to group 'sudo'
+Nov  5 13:23:05 web01 usermod[5131]: add 'backup2' to shadow group 'sudo'

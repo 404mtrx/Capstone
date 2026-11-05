@@ -1,0 +1,10 @@
+Nov  5 08:01:12 web01 sshd[1201]: Accepted publickey for alice from 10.0.0.21 port 52011 ssh2: ED25519 SHA256:q8n4W0cXk1
+Nov  5 08:05:40 web01 sshd[1210]: Accepted password for student from 10.0.0.40 port 52044 ssh2
+Nov  5 08:06:02 web01 sudo:    alice : TTY=pts/0 ; PWD=/home/alice ; USER=root ; COMMAND=/usr/bin/apt update
+Nov  5 08:07:15 web01 kernel: [70100.200001] [UFW ALLOW] IN=eth0 OUT= MAC=08:00:27:aa:bb:cc SRC=10.0.0.21 DST=10.0.0.5 LEN=60 TOS=0x00 PREC=0x00 TTL=64 ID=51001 PROTO=TCP SPT=52011 DPT=22 WINDOW=64240 RES=0x00 SYN URGP=0
+Nov  5 08:09:30 web01 kernel: [70235.300001] [UFW ALLOW] IN=eth0 OUT= MAC=08:00:27:aa:bb:cc SRC=10.0.0.40 DST=10.0.0.5 LEN=60 TOS=0x00 PREC=0x00 TTL=64 ID=51002 PROTO=TCP SPT=53000 DPT=443 WINDOW=64240 RES=0x00 SYN URGP=0
+Nov  5 08:12:44 web01 usermod[1302]: add 'student' to group 'docker'
+10.0.0.40 - - [05/Nov/2026:08:10:01 +0000] "GET / HTTP/1.1" 200 4210 "-" "Mozilla/5.0"
+10.0.0.40 - - [05/Nov/2026:08:10:04 +0000] "GET /products?id=7 HTTP/1.1" 200 2981 "-" "Mozilla/5.0"
+10.0.0.40 - - [05/Nov/2026:08:10:09 +0000] "POST /login HTTP/1.1" 302 0 "-" "Mozilla/5.0"
+10.0.0.40 - - [05/Nov/2026:08:10:12 +0000] "GET /favicon.ico HTTP/1.1" 404 153 "-" "Mozilla/5.0"
