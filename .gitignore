@@ -17,3 +17,7 @@ dist/
 .DS_Store
 
 !.env.example
+
+# Collector follow-mode read positions
+.collector_state.json
+.collector_state.json.tmp

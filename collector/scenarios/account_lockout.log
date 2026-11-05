@@ -1,0 +1,4 @@
+2026-11-05T14:02:11.204511+00:00 web01 sshd[6201]: Failed password for maria from 198.51.100.81 port 52210 ssh2
+2026-11-05T14:02:19.880142+00:00 web01 sshd[6201]: Failed password for maria from 198.51.100.81 port 52210 ssh2
+2026-11-05T14:02:27.311908+00:00 web01 sshd[6201]: Failed password for maria from 198.51.100.81 port 52210 ssh2
+2026-11-05T14:02:27.312440+00:00 web01 sshd[6201]: pam_faillock(sshd:auth): Consecutive login failures for user maria account temporarily locked
