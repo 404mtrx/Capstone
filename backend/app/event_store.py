@@ -20,6 +20,7 @@ MAPPINGS = {
         "hostname": {"type": "keyword"},
         "protocol": {"type": "keyword"},
         "process_name": {"type": "keyword"},
+        "destination_port": {"type": "integer"},
     }
 }
 
