@@ -3,6 +3,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import Session, select
 
+from app.auth import ANALYST_UP, ADMIN_ONLY, require_role, service_or_role
 from app.database import get_session
 from app.models import Alert, User
 from app.schemas import AlertCreate, AlertStatus, AlertUpdate, Severity
@@ -18,7 +19,12 @@ ALLOWED_TRANSITIONS = {
 }
 
 
-@router.post("", response_model=Alert, status_code=201)
+@router.post(
+    "",
+    response_model=Alert,
+    status_code=201,
+    dependencies=[Depends(service_or_role(*ADMIN_ONLY))],  # detection engine (API key) or admin
+)
 def create_alert(payload: AlertCreate, session: Session = Depends(get_session)):
     alert = Alert(**payload.model_dump(exclude={"timestamp"}))
     if payload.timestamp:
@@ -29,7 +35,9 @@ def create_alert(payload: AlertCreate, session: Session = Depends(get_session)):
     return alert
 
 
-@router.get("", response_model=list[Alert])
+@router.get(
+    "", response_model=list[Alert], dependencies=[Depends(service_or_role(*ANALYST_UP))]
+)
 def list_alerts(
     severity: Optional[Severity] = None,
     status: Optional[AlertStatus] = None,
@@ -48,7 +56,9 @@ def list_alerts(
     return session.exec(stmt.offset(offset).limit(limit)).all()
 
 
-@router.get("/{alert_id}", response_model=Alert)
+@router.get(
+    "/{alert_id}", response_model=Alert, dependencies=[Depends(require_role(*ANALYST_UP))]
+)
 def get_alert(alert_id: int, session: Session = Depends(get_session)):
     alert = session.get(Alert, alert_id)
     if not alert:
@@ -56,7 +66,9 @@ def get_alert(alert_id: int, session: Session = Depends(get_session)):
     return alert
 
 
-@router.patch("/{alert_id}", response_model=Alert)
+@router.patch(
+    "/{alert_id}", response_model=Alert, dependencies=[Depends(require_role(*ANALYST_UP))]
+)
 def update_alert(
     alert_id: int, payload: AlertUpdate, session: Session = Depends(get_session)
 ):

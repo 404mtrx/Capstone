@@ -3,11 +3,14 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import Session, select
 
+from app.auth import ANALYST_UP, require_role
 from app.database import get_session
 from app.models import Alert, Case, User, utcnow
 from app.schemas import CaseCreate, CaseStatus, CaseUpdate
 
-router = APIRouter(prefix="/cases", tags=["cases"])
+router = APIRouter(
+    prefix="/cases", tags=["cases"], dependencies=[Depends(require_role(*ANALYST_UP))]
+)
 
 
 def _check_owner(session: Session, owner_id: Optional[int]):

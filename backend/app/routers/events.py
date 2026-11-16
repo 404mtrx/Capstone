@@ -3,13 +3,16 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from opensearchpy.exceptions import OpenSearchException
 
+from app.auth import ADMIN_ONLY, ANALYST_UP, service_or_role
 from app.event_schemas import EventIn
 from app.event_store import get_event_store
 
 router = APIRouter(prefix="/events", tags=["events"])
 
 
-@router.post("", status_code=201)
+@router.post(
+    "", status_code=201, dependencies=[Depends(service_or_role(*ADMIN_ONLY))]
+)  # collector (API key) or admin
 def ingest_events(events: list[EventIn], store=Depends(get_event_store)):
     docs = [e.model_dump(mode="json", exclude_none=True) for e in events]
     try:
@@ -19,7 +22,7 @@ def ingest_events(events: list[EventIn], store=Depends(get_event_store)):
     return {"indexed": indexed}
 
 
-@router.get("")
+@router.get("", dependencies=[Depends(service_or_role(*ANALYST_UP))])
 def search_events(
     username: Optional[str] = None,
     source_ip: Optional[str] = None,
