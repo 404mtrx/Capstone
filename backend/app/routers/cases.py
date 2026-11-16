@@ -3,13 +3,14 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import Session, select
 
-from app.auth import ANALYST_UP, require_role
+from app import audit
+from app.auth import as_analyst
 from app.database import get_session
 from app.models import Alert, Case, User, utcnow
 from app.schemas import CaseCreate, CaseStatus, CaseUpdate
 
 router = APIRouter(
-    prefix="/cases", tags=["cases"], dependencies=[Depends(require_role(*ANALYST_UP))]
+    prefix="/cases", tags=["cases"], dependencies=[Depends(as_analyst)]
 )
 
 
@@ -19,7 +20,11 @@ def _check_owner(session: Session, owner_id: Optional[int]):
 
 
 @router.post("", response_model=Case, status_code=201)
-def create_case(payload: CaseCreate, session: Session = Depends(get_session)):
+def create_case(
+    payload: CaseCreate,
+    session: Session = Depends(get_session),
+    user: Optional[User] = Depends(as_analyst),
+):
     alert = session.get(Alert, payload.alert_id)
     if not alert:
         raise HTTPException(404, "Alert not found")
@@ -37,6 +42,10 @@ def create_case(payload: CaseCreate, session: Session = Depends(get_session)):
         alert.status = "investigating"
         session.add(alert)
     session.add(case)
+    session.flush()  # gives the case its id for the audit row
+    audit.record(
+        session, user, "case_open", "case", case.id, {"alert_id": alert.id, "title": case.title}
+    )
     session.commit()
     session.refresh(case)
     return case
@@ -71,7 +80,10 @@ def get_case(case_id: int, session: Session = Depends(get_session)):
 
 @router.patch("/{case_id}", response_model=Case)
 def update_case(
-    case_id: int, payload: CaseUpdate, session: Session = Depends(get_session)
+    case_id: int,
+    payload: CaseUpdate,
+    session: Session = Depends(get_session),
+    user: Optional[User] = Depends(as_analyst),
 ):
     case = session.get(Case, case_id)
     if not case:
@@ -89,6 +101,11 @@ def update_case(
 
     if "status" in changes:
         case.closed_at = utcnow() if case.status == "closed" else None
+
+    detail = {"fields": sorted(changes)}
+    if "status" in changes:
+        detail["status"] = changes["status"]
+    audit.record(session, user, "case_update", "case", case.id, detail)
 
     session.add(case)
     session.commit()

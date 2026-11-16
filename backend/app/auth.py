@@ -67,6 +67,11 @@ def require_role(*roles: str):
     return check
 
 
+as_analyst = require_role(*ANALYST_UP)
+as_lead = require_role(*LEAD_UP)
+as_admin = require_role(*ADMIN_ONLY)
+
+
 def _key_ok(x_api_key: Optional[str]) -> bool:
     return bool(settings.api_key) and bool(x_api_key) and hmac.compare_digest(
         x_api_key.encode(), settings.api_key.encode()

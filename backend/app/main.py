@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import alerts, auth, cases, events
+from app.routers import alerts, audit, auth, cases, events
 
 app = FastAPI(title="SentinelWatch API", version="0.2.0")
 app.add_middleware(
@@ -13,6 +13,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(alerts.router)
 app.include_router(cases.router)
+app.include_router(audit.router)
 app.include_router(events.router)
 
 

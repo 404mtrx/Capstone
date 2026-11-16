@@ -5,6 +5,7 @@ import sys
 
 from sqlmodel import Session, select
 
+from app import audit
 from app.database import engine
 from app.models import ROLES, User
 from app.security import hash_password
@@ -25,12 +26,16 @@ def main():
     with Session(engine) as session:
         if session.exec(select(User).where(User.username == args.username)).first():
             sys.exit(f"User '{args.username}' already exists.")
-        session.add(
-            User(
-                username=args.username,
-                password_hash=hash_password(password),
-                role=args.role,
-            )
+        user = User(
+            username=args.username,
+            password_hash=hash_password(password),
+            role=args.role,
+        )
+        session.add(user)
+        session.flush()
+        audit.record(
+            session, None, "user_create", "user", user.id,
+            {"username": user.username, "role": user.role}, username="cli",
         )
         session.commit()
     print(f"Created {args.role} '{args.username}'.")
