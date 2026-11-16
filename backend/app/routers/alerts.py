@@ -6,7 +6,7 @@ from sqlmodel import Session, select
 from app import audit
 from app.auth import ADMIN_ONLY, ANALYST_UP, as_analyst, service_or_role
 from app.database import get_session
-from app.models import Alert, User
+from app.models import Alert, User, utcnow
 from app.schemas import AlertCreate, AlertStatus, AlertUpdate, Severity
 
 router = APIRouter(prefix="/alerts", tags=["alerts"])
@@ -87,6 +87,9 @@ def update_alert(
             session, user, "alert_status_change", "alert", alert.id,
             {"from": alert.status, "to": payload.status},
         )
+        if alert.status == "new" and alert.acknowledged_at is None:
+            alert.acknowledged_at = utcnow()
+        alert.closed_at = utcnow() if payload.status == "closed" else None
         alert.status = payload.status
 
     if "assigned_to" in payload.model_fields_set:

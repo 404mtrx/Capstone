@@ -65,7 +65,17 @@ makes `/events` return 503.
 | `GET /alerts`, `GET /events` | analyst, lead, admin, or the service API key |
 | `POST /alerts`, `POST /events` | admin or the service API key |
 | `PATCH /alerts/{id}`, all `/cases` endpoints | analyst, lead, admin |
+| `GET /metrics/summary` | lead, admin |
+| `/users` (list, create, change role or deactivate), `GET /audit` | admin |
 
 The detection engine and `collector/send_events.py` send the key from the environment:
 `export SENTINEL_API_KEY=<the API_KEY value from backend/.env>`.
 No token gives 401; a signed-in user with the wrong role gives 403.
+
+## Checking it
+
+- `bash scripts/test_script.sh` runs the Sprint 2 checks (set `AUTH_REQUIRED=false` in `backend/.env` for that one).
+- `bash scripts/test_auth.sh` runs the login, role, API key, audit, user and metrics checks
+  (needs `AUTH_REQUIRED=true` and `API_KEY` in `backend/.env`, and the API running).
+- Both save their output in `docs/test-evidence/`.
+- Create the first administrator with `python -m app.create_user <name> --role admin`; after that, administrators create users with `POST /users`.
