@@ -4,6 +4,8 @@ from sqlalchemy.pool import StaticPool
 from sqlmodel import Session, SQLModel, create_engine
 
 from app import models
+from app.config import settings
+from app.security import hash_password
 from app.database import get_session
 from app.event_store import doc_id, get_event_store
 from app.main import app
@@ -62,3 +64,46 @@ def make_user(engine):
             return user.id
 
     return _make
+
+
+@pytest.fixture(autouse=True)
+def auth_off(monkeypatch):
+    """Most tests are about alerts, cases and events, not login: switch auth off.
+    Tests of login and access use the `auth_on` fixture."""
+    monkeypatch.setattr(settings, "auth_required", False)
+
+
+@pytest.fixture
+def auth_on(monkeypatch):
+    monkeypatch.setattr(settings, "auth_required", True)
+    monkeypatch.setattr(settings, "secret_key", "test-secret-key-for-pytest-only-0123456789")
+    monkeypatch.setattr(settings, "api_key", "test-service-key")
+
+
+@pytest.fixture
+def make_login_user(engine):
+    """Create a user with a real Argon2 password hash."""
+
+    def _make(username="analyst1", role="analyst", password="correct-horse-battery", active=True):
+        with Session(engine) as session:
+            user = models.User(
+                username=username, password_hash=hash_password(password), role=role, is_active=active
+            )
+            session.add(user)
+            session.commit()
+            session.refresh(user)
+            return user.id
+
+    return _make
+
+
+@pytest.fixture
+def login(client):
+    """Return Authorization headers for a user created with make_login_user."""
+
+    def _login(username="analyst1", password="correct-horse-battery"):
+        r = client.post("/auth/login", json={"username": username, "password": password})
+        assert r.status_code == 200, r.text
+        return {"Authorization": f"Bearer {r.json()['access_token']}"}
+
+    return _login
