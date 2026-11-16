@@ -14,7 +14,18 @@ queries, e.g. `select * from "user";`.
 
 `docker compose up -d` starts PostgreSQL (port 5432) and OpenSearch (port 9200).
 OpenSearch needs about 1 GB of RAM; give Docker Desktop at least 4 GB.
-Check it with `curl http://localhost:9200` once the container is healthy.
+
+OpenSearch security is ON: it uses HTTPS (a self-signed demo certificate) and needs a login.
+- Admin login: user `admin`, password from `OPENSEARCH_ADMIN_PASSWORD` in a `.env` file next to
+  `docker-compose.yml` (a development default is built in).
+- The API does not use the admin account. Run `bash scripts/opensearch_setup_user.sh` once after the
+  container is healthy; it creates the `sentinel_app` user that can only use the `sentinel-events` index.
+  Put the same user and password in `backend/.env` (`OPENSEARCH_USER`, `OPENSEARCH_PASSWORD`).
+- Check it: `curl -sk https://localhost:9200` must say 401, and
+  `curl -sk -u admin:<password> https://localhost:9200` must show the cluster.
+- If you start from an older OpenSearch volume that had security off, recreate it:
+  `docker compose stop opensearch && docker compose rm -f opensearch && docker volume rm $(docker volume ls -q | grep osdata)`
+  then `docker compose up -d` and resend your events (this keeps PostgreSQL).
 
 ## API (http://127.0.0.1:8000/docs)
 
