@@ -1,5 +1,4 @@
-
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Search, AlertTriangle, Eye } from 'lucide-react'
 import './AlertsPage.css'
 
@@ -12,53 +11,84 @@ type Alert = {
   device: string
   time: string
   description: string
+  status: string
 }
 
-const sampleAlerts: Alert[] = [
-  {
-    id: 'SW-001',
-    title: 'Possible brute-force login attack',
-    severity: 'Critical',
-    device: 'SERVER-01',
-    time: '10:42 AM',
-    description: 'Multiple failed login attempts detected.'
-  },
-  {
-    id: 'SW-002',
-    title: 'Suspicious administrator login',
-    severity: 'High',
-    device: 'PC-ADMIN',
-    time: '10:25 AM',
-    description: 'Administrator login from an unusual location.'
-  },
-  {
-    id: 'SW-003',
-    title: 'Multiple failed password attempts',
-    severity: 'Medium',
-    device: 'PC-004',
-    time: '09:30 AM',
-    description: 'Repeated authentication failures detected.'
-  },
-  {
-    id: 'SW-004',
-    title: 'Login outside business hours',
-    severity: 'Low',
-    device: 'PC-007',
-    time: '08:15 AM',
-    description: 'Login detected outside configured business hours.'
-  }
-]
+type ApiAlert = {
+  id: number | string
+  rule_name: string
+  severity: string
+  status: string
+  source?: string | null
+  source_ip?: string | null
+  username?: string | null
+  reason?: string | null
+  created_at?: string | null
+}
 
-function AlertsPage() {
+function formatSeverity(value: string): Severity {
+  const severity = value.toLowerCase()
+
+  if (severity === 'critical') return 'Critical'
+  if (severity === 'high') return 'High'
+  if (severity === 'medium') return 'Medium'
+  return 'Low'
+}
+
+function formatStatus(value: string): string {
+  if (!value || value.toLowerCase() === 'new') return 'Open'
+  return value.charAt(0).toUpperCase() + value.slice(1)
+}
+
+function AlertsPage({ token }: { token: string }) {
+  const [alerts, setAlerts] = useState<Alert[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [filter, setFilter] = useState('All')
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<Alert | null>(null)
   const [reviewed, setReviewed] = useState<string[]>([])
 
-  const filteredAlerts = sampleAlerts.filter(alert => {
-    const matchesSeverity =
-      filter === 'All' || alert.severity === filter
+  useEffect(() => {
+    async function loadAlerts() {
+      try {
+        const response = await fetch('http://127.0.0.1:8000/alerts', {
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+})
 
+        if (!response.ok) {
+          throw new Error(`Could not load alerts (HTTP ${response.status})`)
+        }
+
+        const data: ApiAlert[] = await response.json()
+
+        setAlerts(
+          data.map(alert => ({
+            id: String(alert.id),
+            title: alert.rule_name,
+            severity: formatSeverity(alert.severity),
+            device: alert.source_ip || alert.source || alert.username || 'Unknown',
+            time: alert.created_at
+              ? new Date(alert.created_at).toLocaleString()
+              : 'Unknown time',
+            description: alert.reason || 'No description provided.',
+            status: formatStatus(alert.status),
+          }))
+        )
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Could not load alerts.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    void loadAlerts()
+  }, [])
+
+  const filteredAlerts = alerts.filter(alert => {
+    const matchesSeverity = filter === 'All' || alert.severity === filter
     const matchesSearch =
       `${alert.title} ${alert.device} ${alert.id}`
         .toLowerCase()
@@ -73,6 +103,10 @@ function AlertsPage() {
         ? previous.filter(item => item !== id)
         : [...previous, id]
     )
+  }
+
+  function currentStatus(alert: Alert) {
+    return reviewed.includes(alert.id) ? 'Reviewed' : alert.status
   }
 
   return (
@@ -120,6 +154,7 @@ function AlertsPage() {
               <th>Action</th>
             </tr>
           </thead>
+
           <tbody>
             {filteredAlerts.map(alert => (
               <tr key={alert.id}>
@@ -135,8 +170,14 @@ function AlertsPage() {
                 <td>{alert.device}</td>
                 <td>{alert.time}</td>
                 <td>
-                  <span className={reviewed.includes(alert.id) ? 'status-reviewed' : 'status-open'}>
-                    {reviewed.includes(alert.id) ? 'Reviewed' : 'Open'}
+                  <span
+                    className={
+                      currentStatus(alert) === 'Reviewed'
+                        ? 'status-reviewed'
+                        : 'status-open'
+                    }
+                  >
+                    {currentStatus(alert)}
                   </span>
                 </td>
                 <td>
@@ -152,8 +193,14 @@ function AlertsPage() {
           </tbody>
         </table>
 
-        {filteredAlerts.length === 0 && (
-          <p className="alerts-empty">No matching alerts found.</p>
+        {loading && <p className="alerts-empty">Loading alerts…</p>}
+        {error && <p className="alerts-empty">{error}</p>}
+        {!loading && !error && filteredAlerts.length === 0 && (
+          <p className="alerts-empty">
+            {alerts.length === 0
+              ? 'The backend returned no alerts yet.'
+              : 'No matching alerts found.'}
+          </p>
         )}
       </div>
 
@@ -176,16 +223,13 @@ function AlertsPage() {
 
             <dl>
               <dt>Severity</dt><dd>{selected.severity}</dd>
-              <dt>Device</dt><dd>{selected.device}</dd>
+              <dt>Device / source</dt><dd>{selected.device}</dd>
               <dt>Time</dt><dd>{selected.time}</dd>
-              <dt>Status</dt>
-              <dd>{reviewed.includes(selected.id) ? 'Reviewed' : 'Open'}</dd>
+              <dt>Status</dt><dd>{currentStatus(selected)}</dd>
             </dl>
 
             <div className="alert-detail-actions">
-              <button onClick={() => setSelected(null)}>
-                Close
-              </button>
+              <button onClick={() => setSelected(null)}>Close</button>
               <button
                 onClick={() => {
                   toggleReviewed(selected.id)
