@@ -1,4 +1,5 @@
 import json
+import os
 from datetime import datetime
 from pathlib import Path
 from urllib.error import HTTPError, URLError
@@ -36,6 +37,15 @@ except ImportError:
 BASE_DIR = Path(__file__).resolve().parent.parent
 EVENT_FILE = BASE_DIR / "normalized_events.json"
 API_BASE_URL = "http://localhost:8000"
+
+
+# The backend asks for an API key (X-API-Key). Set it in the environment: export SENTINEL_API_KEY=...
+def api_headers(extra=None):
+    headers = dict(extra or {})
+    key = os.environ.get("SENTINEL_API_KEY")
+    if key:
+        headers["X-API-Key"] = key
+    return headers
 
 
 def analyze_event(event):
@@ -128,6 +138,7 @@ def alert_key(alert):
 def get_existing_alerts():
     request = Request(
         f"{API_BASE_URL}/alerts?limit=200",
+        headers=api_headers(),
         method="GET",
     )
 
@@ -142,7 +153,7 @@ def post_alert(alert):
     request = Request(
         f"{API_BASE_URL}/alerts",
         data=data,
-        headers={"Content-Type": "application/json"},
+        headers=api_headers({"Content-Type": "application/json"}),
         method="POST",
     )
 

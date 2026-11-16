@@ -9,6 +9,7 @@ events again is safe: the API stores each event once.
 """
 import argparse
 import json
+import os
 import sys
 import urllib.error
 import urllib.request
@@ -17,11 +18,19 @@ DEFAULT_URL = "http://127.0.0.1:8000/events"
 DEFAULT_BATCH_SIZE = 500
 
 
+def _headers():
+    """Content type, plus the API key if SENTINEL_API_KEY is set (the backend asks for it)."""
+    headers = {"Content-Type": "application/json"}
+    if os.environ.get("SENTINEL_API_KEY"):
+        headers["X-API-Key"] = os.environ["SENTINEL_API_KEY"]
+    return headers
+
+
 def post_batch(events, url=DEFAULT_URL):
     """POST one list of events. Returns (HTTP status, parsed JSON body)."""
     body = json.dumps(events).encode("utf-8")
     request = urllib.request.Request(
-        url, data=body, method="POST", headers={"Content-Type": "application/json"}
+        url, data=body, method="POST", headers=_headers()
     )
     with urllib.request.urlopen(request, timeout=30) as response:
         return response.status, json.loads(response.read() or b"null")

@@ -56,3 +56,16 @@ Copy `backend/.env.example` to `backend/.env` and set `SECRET_KEY` (a long rando
 Error cases to show: a bad severity returns 422, an illegal status change returns 409,
 a second open case on the same alert returns 409, and `docker compose stop opensearch`
 makes `/events` return 503.
+
+## Who may call what
+
+| Endpoint | Allowed |
+|---|---|
+| `GET /health`, `POST /auth/login` | anyone |
+| `GET /alerts`, `GET /events` | analyst, lead, admin, or the service API key |
+| `POST /alerts`, `POST /events` | admin or the service API key |
+| `PATCH /alerts/{id}`, all `/cases` endpoints | analyst, lead, admin |
+
+The detection engine and `collector/send_events.py` send the key from the environment:
+`export SENTINEL_API_KEY=<the API_KEY value from backend/.env>`.
+No token gives 401; a signed-in user with the wrong role gives 403.
