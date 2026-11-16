@@ -8,13 +8,25 @@ OSU=$(grep -E '^OPENSEARCH_USER=' backend/.env | cut -d= -f2-)
 OSP=$(grep -E '^OPENSEARCH_PASSWORD=' backend/.env | cut -d= -f2-)
 [ -n "$OSU" ] && [ -n "$OSP" ] || { echo "Set OPENSEARCH_USER and OPENSEARCH_PASSWORD in backend/.env first (see backend/.env.example)."; exit 1; }
 API=https://localhost:9200/_plugins/_security/api
+export OSU OSP
 put() { curl -sk -u "admin:$ADMIN_PW" -X PUT "$API/$1" -H 'Content-Type: application/json' -d "$2"; echo; }
 
+user_json() { python - <<'PY'
+import json, os
+print(json.dumps(dict(password=os.environ["OSP"], description="SentinelWatch API")))
+PY
+}
+mapping_json() { python - <<'PY'
+import json, os
+print(json.dumps(dict(users=[os.environ["OSU"]])))
+PY
+}
+
 echo "== role: may only use the sentinel-events index =="
-put roles/sentinel_events_rw '{"cluster_permissions":["cluster_composite_ops"],"index_permissions":[{"index_patterns":["sentinel-events*"],"allowed_actions":["indices_all"]}]}'
+put roles/sentinel_events_rw '{"cluster_permissions":["cluster_composite_ops","cluster:monitor/main"],"index_permissions":[{"index_patterns":["sentinel-events*"],"allowed_actions":["indices_all"]}]}'
 echo "== user: $OSU =="
-put internalusers/$OSU "$(python -c "import json,sys;print(json.dumps({'password':sys.argv[1],'description':'SentinelWatch API'}))" "$OSP")"
+put "internalusers/$OSU" "$(user_json)"
 echo "== map the user to the role =="
-put rolesmapping/sentinel_events_rw "$(python -c "import json,sys;print(json.dumps({'users':[sys.argv[1]]}))" "$OSU")"
+put rolesmapping/sentinel_events_rw "$(mapping_json)"
 echo "== check: the new user can log in =="
 curl -sk -o /dev/null -w "HTTP %{http_code}\n" -u "$OSU:$OSP" https://localhost:9200
