@@ -25,6 +25,16 @@ Check it with `curl http://localhost:9200` once the container is healthy.
 `POST /alerts` accepts the dict the detection engine returns as-is
 (`message` is stored as the alert reason, `timestamp` as `created_at`).
 
+## Login and access
+
+Copy `backend/.env.example` to `backend/.env` and set `SECRET_KEY` (a long random string) and `API_KEY`.
+
+- `POST /auth/login` with `{"username": "...", "password": "..."}` returns `{"access_token", "token_type": "bearer", "user": {...}}`.
+  Send the token as `Authorization: Bearer <token>` on every other request. Tokens expire after `ACCESS_TOKEN_MINUTES`.
+- `GET /auth/me` returns the signed-in user.
+- Wrong username, wrong password and inactive account all return the same 401 message.
+- `AUTH_REQUIRED=false` in `.env` turns access checks off (for a demo only; never for real use).
+
 ## Users and tests
 
 - Create a user: `python -m app.create_user <username> --role admin` (run from `backend/`)
