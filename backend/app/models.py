@@ -41,6 +41,21 @@ class Alert(SQLModel, table=True):
     created_at: datetime = Field(default_factory=utcnow, index=True)
 
 
+class AuditLog(SQLModel, table=True):
+    """Who did what, and when. Rows are only ever added."""
+
+    __tablename__ = "audit_log"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    timestamp: datetime = Field(default_factory=utcnow, index=True)
+    user_id: Optional[int] = Field(default=None, foreign_key="user.id")
+    username: str = Field(index=True)  # "system" when no user (auth off or API key)
+    action: str = Field(index=True)
+    target_type: Optional[str] = None
+    target_id: Optional[int] = None
+    detail: Optional[dict] = Field(default=None, sa_column=Column(JSON))
+
+
 CASE_STATUSES = ("open", "investigating", "contained", "closed")
 
 

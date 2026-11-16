@@ -3,7 +3,8 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import Session, select
 
-from app.auth import ANALYST_UP, ADMIN_ONLY, require_role, service_or_role
+from app import audit
+from app.auth import ADMIN_ONLY, ANALYST_UP, as_analyst, service_or_role
 from app.database import get_session
 from app.models import Alert, User
 from app.schemas import AlertCreate, AlertStatus, AlertUpdate, Severity
@@ -57,7 +58,7 @@ def list_alerts(
 
 
 @router.get(
-    "/{alert_id}", response_model=Alert, dependencies=[Depends(require_role(*ANALYST_UP))]
+    "/{alert_id}", response_model=Alert, dependencies=[Depends(as_analyst)]
 )
 def get_alert(alert_id: int, session: Session = Depends(get_session)):
     alert = session.get(Alert, alert_id)
@@ -66,11 +67,12 @@ def get_alert(alert_id: int, session: Session = Depends(get_session)):
     return alert
 
 
-@router.patch(
-    "/{alert_id}", response_model=Alert, dependencies=[Depends(require_role(*ANALYST_UP))]
-)
+@router.patch("/{alert_id}", response_model=Alert)
 def update_alert(
-    alert_id: int, payload: AlertUpdate, session: Session = Depends(get_session)
+    alert_id: int,
+    payload: AlertUpdate,
+    session: Session = Depends(get_session),
+    user: Optional[User] = Depends(as_analyst),
 ):
     alert = session.get(Alert, alert_id)
     if not alert:
@@ -81,11 +83,18 @@ def update_alert(
             raise HTTPException(
                 409, f"Cannot move alert from '{alert.status}' to '{payload.status}'"
             )
+        audit.record(
+            session, user, "alert_status_change", "alert", alert.id,
+            {"from": alert.status, "to": payload.status},
+        )
         alert.status = payload.status
 
     if "assigned_to" in payload.model_fields_set:
         if payload.assigned_to is not None and not session.get(User, payload.assigned_to):
             raise HTTPException(400, "assigned_to user does not exist")
+        audit.record(
+            session, user, "alert_assign", "alert", alert.id, {"assigned_to": payload.assigned_to}
+        )
         alert.assigned_to = payload.assigned_to
 
     session.add(alert)

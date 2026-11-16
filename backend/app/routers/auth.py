@@ -3,6 +3,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 
+from app import audit
 from app.auth import create_access_token, current_user
 from app.database import get_session
 from app.models import User
@@ -22,7 +23,11 @@ def login(payload: LoginRequest, session: Session = Depends(get_session)):
     ok = verify_password(payload.password, user.password_hash if user else _DUMMY_HASH)
     # Same message for a wrong username, a wrong password and an inactive account.
     if not user or not ok or not user.is_active:
+        audit.record(session, None, "login_failure", username=payload.username)
+        session.commit()
         raise HTTPException(401, "Incorrect username or password")
+    audit.record(session, user, "login_success")
+    session.commit()
     return LoginResponse(
         access_token=create_access_token(user),
         user=UserRead(id=user.id, username=user.username, role=user.role, is_active=user.is_active),
