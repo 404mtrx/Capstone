@@ -42,6 +42,20 @@ class CaseUpdate(BaseModel):
     owner_id: Optional[int] = None  # send null to remove the owner
 
 
+Role = Literal["analyst", "lead", "admin"]
+
+
+class UserCreate(BaseModel):
+    username: str = Field(min_length=3, max_length=50)
+    password: str = Field(min_length=12, max_length=128)
+    role: Role = "analyst"
+
+
+class UserUpdate(BaseModel):
+    role: Optional[Role] = None
+    is_active: Optional[bool] = None
+
+
 class LoginRequest(BaseModel):
     username: str
     password: str

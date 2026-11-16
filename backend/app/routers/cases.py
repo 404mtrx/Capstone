@@ -40,6 +40,8 @@ def create_case(
     # Opening a case means someone is working the alert.
     if alert.status == "new":
         alert.status = "investigating"
+        if alert.acknowledged_at is None:
+            alert.acknowledged_at = utcnow()
         session.add(alert)
     session.add(case)
     session.flush()  # gives the case its id for the audit row

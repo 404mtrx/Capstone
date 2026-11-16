@@ -39,6 +39,8 @@ class Alert(SQLModel, table=True):
     evidence: Optional[dict] = Field(default=None, sa_column=Column(JSON))
     assigned_to: Optional[int] = Field(default=None, foreign_key="user.id")
     created_at: datetime = Field(default_factory=utcnow, index=True)
+    acknowledged_at: Optional[datetime] = None  # first time it left "new"
+    closed_at: Optional[datetime] = None  # set when closed, cleared on reopen
 
 
 class AuditLog(SQLModel, table=True):
