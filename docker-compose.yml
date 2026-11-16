@@ -21,15 +21,17 @@ services:
     container_name: sentinelwatch-opensearch
     environment:
       discovery.type: single-node
-      DISABLE_SECURITY_PLUGIN: "true"        # dev only; we lock this down in the security phase
-      DISABLE_INSTALL_DEMO_CONFIG: "true"
+      # Security is ON: HTTPS and a login. The admin password must be strong (8+ characters
+      # with upper case, lower case, a digit and a symbol). Override it with
+      # OPENSEARCH_ADMIN_PASSWORD in a .env file next to this file.
+      OPENSEARCH_INITIAL_ADMIN_PASSWORD: "${OPENSEARCH_ADMIN_PASSWORD:-Os-Dev#7qZ4mWx9Lp2}"
       OPENSEARCH_JAVA_OPTS: "-Xms512m -Xmx512m"
     ports:
       - "127.0.0.1:9200:9200"
     volumes:
       - osdata:/usr/share/opensearch/data
     healthcheck:
-      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -Eq '\"status\":\"(green|yellow)\"'"]
+      test: ["CMD-SHELL", "curl -sk -u admin:$$OPENSEARCH_INITIAL_ADMIN_PASSWORD https://localhost:9200/_cluster/health | grep -Eq '\"status\":\"(green|yellow)\"'"]
       interval: 10s
       timeout: 5s
       retries: 20

@@ -25,6 +25,20 @@ MAPPINGS = {
 }
 
 
+def connection_options(url: str) -> dict:
+    """Login and TLS settings for the OpenSearch client, taken from the settings."""
+    options: dict = {}
+    if settings.opensearch_user:
+        options["http_auth"] = (settings.opensearch_user, settings.opensearch_password)
+    if url.startswith("https"):
+        options["use_ssl"] = True
+        options["verify_certs"] = settings.opensearch_verify_certs
+        options["ssl_show_warn"] = settings.opensearch_verify_certs  # quiet only for the dev cert
+        if settings.opensearch_ca_certs:
+            options["ca_certs"] = settings.opensearch_ca_certs
+    return options
+
+
 def doc_id(event: dict) -> str:
     """Same event -> same id, so re-sending a log file never creates duplicates."""
     return hashlib.sha256(json.dumps(event, sort_keys=True).encode()).hexdigest()
@@ -32,7 +46,7 @@ def doc_id(event: dict) -> str:
 
 class EventStore:
     def __init__(self, url: str, index: str):
-        self.client = OpenSearch(hosts=[url])
+        self.client = OpenSearch(hosts=[url], **connection_options(url))
         self.index = index
 
     def ensure_index(self):

@@ -7,6 +7,13 @@ class Settings(BaseSettings):
     )
     opensearch_url: str = "http://localhost:9200"
     opensearch_index: str = "sentinel-events"
+    # OpenSearch login. Leave the user empty only for an unsecured local OpenSearch.
+    opensearch_user: str = ""
+    opensearch_password: str = ""
+    # The demo certificate that OpenSearch makes for itself is self-signed, so checking it
+    # fails. Keep False for local development; set True and give a CA file for real use.
+    opensearch_verify_certs: bool = False
+    opensearch_ca_certs: str = ""
 
     # Authentication. Set AUTH_REQUIRED=false in .env to turn it off for a demo.
     auth_required: bool = True

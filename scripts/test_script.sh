@@ -6,6 +6,8 @@
 cd "${1:-$(git rev-parse --show-toplevel 2>/dev/null || echo $HOME/Capstone)}" || exit 1
 source backend/.venv/bin/activate
 mkdir -p docs/test-evidence
+# OpenSearch login used for the direct checks (the same ones the API uses)
+OSU=$(grep -E '^OPENSEARCH_USER=' backend/.env | cut -d= -f2-); OSP=$(grep -E '^OPENSEARCH_PASSWORD=' backend/.env | cut -d= -f2-)
 (
 H='Content-Type: application/json'
 B=http://localhost:8000
@@ -15,7 +17,7 @@ echo; echo "=== TC-SEC-03 env files ==="; git ls-files | grep -i "\.env"
 echo; echo "=== EV-01 pytest ==="; (cd backend && pytest -q 2>&1 | tail -4)
 echo; echo "=== TC-API-11 dedup: resend then count ==="
 python collector/send_events.py normalized_events.json firewall_events.json
-curl -s http://localhost:9200/sentinel-events/_count; echo
+curl -sk -u "$OSU:$OSP" https://localhost:9200/sentinel-events/_count; echo
 echo; echo "=== create alert ==="
 R=$(curl -s -X POST $B/alerts -H "$H" -d '{"rule_name":"Failed Login Detected","severity":"medium","source_ip":"10.0.0.9","message":"409 test"}')
 echo $R
@@ -38,7 +40,7 @@ echo; echo "=== TC-API-13 OpenSearch down (expect 503) ==="
 docker compose stop opensearch
 python collector/send_events.py normalized_events.json
 docker compose start opensearch
-until curl -s http://localhost:9200 >/dev/null; do sleep 3; done
+until curl -sk -u "$OSU:$OSP" https://localhost:9200 >/dev/null; do sleep 3; done
 echo; echo "=== TC-DB-03 migration down/up (wipes data) ==="
 (cd backend && alembic downgrade base 2>&1 | tail -2 && alembic upgrade head 2>&1 | tail -2)
 echo; echo "ALL DONE"
