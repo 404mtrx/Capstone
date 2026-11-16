@@ -1,4 +1,3 @@
-
 import { useState } from 'react'
 import {
   Radar,
@@ -43,7 +42,7 @@ const threats = [
 
 function App() {
   const [activePage, setActivePage] = useState('Dashboard')
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [accessToken, setAccessToken] = useState<string | null>(null)
 
   const [theme, setTheme] = useState<Theme>(() => {
     try {
@@ -61,29 +60,26 @@ function App() {
     try {
       localStorage.setItem('sentinelwatch-theme', newTheme)
     } catch {
-      // Theme still changes if storage is unavailable.
+      // The theme still changes if browser storage is unavailable.
     }
   }
 
-  function handleLogin() {
+  function handleLogin(token: string) {
+    setAccessToken(token)
     setActivePage('Dashboard')
-    setIsLoggedIn(true)
   }
 
   function handleLogout() {
-    setIsLoggedIn(false)
+    setAccessToken(null)
     setActivePage('Dashboard')
   }
 
-  // Frontend demonstration only.
-  // Real authentication must be handled by the backend.
-  if (!isLoggedIn) {
+  if (!accessToken) {
     return <LoginPage onLogin={handleLogin} />
   }
 
   return (
     <div className={`app-layout theme-${theme}`}>
-      {/* Sidebar */}
       <aside className="sidebar">
         <div className="logo">
           <div className="sentinel-logo">
@@ -99,7 +95,7 @@ function App() {
         <p className="menu-label">WORKSPACE</p>
 
         <nav aria-label="Main navigation">
-          {menuItems.map((item) => {
+          {menuItems.map(item => {
             const Icon = item.icon
 
             return (
@@ -113,11 +109,7 @@ function App() {
               >
                 <Icon size={20} />
 
-                <span
-                  className={
-                    item.name === 'Alerts' ? 'alerts-label' : ''
-                  }
-                >
+                <span className={item.name === 'Alerts' ? 'alerts-label' : ''}>
                   {item.name}
                 </span>
 
@@ -129,11 +121,10 @@ function App() {
           })}
         </nav>
 
-        {/* Sidebar Footer and Logout */}
         <div className="sidebar-footer">
           <div className="demo-status">
             <span className="online-dot" />
-            <span>Demo Mode</span>
+            <span>Signed In</span>
           </div>
 
           <button
@@ -147,19 +138,13 @@ function App() {
         </div>
       </aside>
 
-      {/* Main Content */}
       <main className="main-content">
         <header className="top-header">
           <div>
             <h1>
-              {activePage === 'Dashboard'
-                ? 'Security Overview'
-                : activePage}
+              {activePage === 'Dashboard' ? 'Security Overview' : activePage}
             </h1>
-
-            <p>
-              Welcome to your SentinelWatch security workspace.
-            </p>
+            <p>Welcome to your SentinelWatch security workspace.</p>
           </div>
 
           <span className="demo-badge">Sample Data</span>
@@ -167,19 +152,16 @@ function App() {
 
         {activePage === 'Dashboard' ? (
           <>
-            {/* Welcome Section */}
             <section className="welcome-card">
               <h2>Your Business Security at a Glance</h2>
-
               <p>
-                Monitor threats, review alerts, and protect your
-                business from one simple dashboard.
+                Monitor threats, review alerts, and protect your business from
+                one simple dashboard.
               </p>
             </section>
 
-            {/* Threat Overview */}
             <section className="threat-grid">
-              {threats.map((threat) => (
+              {threats.map(threat => (
                 <div
                   className={`threat-card ${threat.color}`}
                   key={threat.name}
@@ -191,66 +173,42 @@ function App() {
               ))}
             </section>
 
-            {/* Attention Panel */}
             <section className="alerts-panel">
               <h2>Needs Your Attention</h2>
-
-              <p>
-                Important security events requiring review
-              </p>
+              <p>Important security events requiring review</p>
 
               <div className="alert-row">
                 <div>
-                  <strong>
-                    Possible brute-force login attack
-                  </strong>
-
-                  <p>
-                    SERVER-01 · Multiple failed login attempts
-                  </p>
+                  <strong>Possible brute-force login attack</strong>
+                  <p>SERVER-01 · Multiple failed login attempts</p>
                 </div>
-
-                <span className="alert-badge critical-badge">
-                  Critical
-                </span>
+                <span className="alert-badge critical-badge">Critical</span>
               </div>
 
               <div className="alert-row">
                 <div>
-                  <strong>
-                    Suspicious administrator login
-                  </strong>
-
-                  <p>
-                    PC-ADMIN · Unusual login activity
-                  </p>
+                  <strong>Suspicious administrator login</strong>
+                  <p>PC-ADMIN · Unusual login activity</p>
                 </div>
-
-                <span className="alert-badge high-badge">
-                  High
-                </span>
+                <span className="alert-badge high-badge">High</span>
               </div>
             </section>
           </>
         ) : activePage === 'Alerts' ? (
-          <AlertsPage />
+          <AlertsPage token={accessToken} />
         ) : activePage === 'Logs' ? (
           <LogsPage />
         ) : activePage === 'Devices' ? (
-          <DevicesPage /> 
-          ) : activePage === 'Rules' ? (
-          <RulesPage /> 
-          ) : activePage === 'Reports' ? (
-           <ReportsPage />
+          <DevicesPage />
+        ) : activePage === 'Rules' ? (
+          <RulesPage />
+        ) : activePage === 'Reports' ? (
+          <ReportsPage />
         ) : activePage === 'Settings' ? (
           <>
-            {/* Appearance Settings */}
             <section className="alerts-panel settings-panel">
               <h2>Appearance Settings</h2>
-
-              <p>
-                Customize how SentinelWatch looks on your screen.
-              </p>
+              <p>Customize how SentinelWatch looks on your screen.</p>
 
               <div className="theme-setting">
                 <div>
@@ -262,9 +220,7 @@ function App() {
                   <button
                     type="button"
                     className={`theme-option ${
-                      theme === 'dark'
-                        ? 'theme-option-active'
-                        : ''
+                      theme === 'dark' ? 'theme-option-active' : ''
                     }`}
                     onClick={() => changeTheme('dark')}
                     aria-pressed={theme === 'dark'}
@@ -275,9 +231,7 @@ function App() {
                   <button
                     type="button"
                     className={`theme-option ${
-                      theme === 'light'
-                        ? 'theme-option-active'
-                        : ''
+                      theme === 'light' ? 'theme-option-active' : ''
                     }`}
                     onClick={() => changeTheme('light')}
                     aria-pressed={theme === 'light'}
@@ -288,16 +242,12 @@ function App() {
               </div>
             </section>
 
-            {/* Account Security */}
             <AccountSecurity />
           </>
         ) : (
           <section className="alerts-panel">
             <h2>{activePage}</h2>
-
-            <p>
-              This section will be developed next.
-            </p>
+            <p>This section will be developed next.</p>
           </section>
         )}
       </main>
