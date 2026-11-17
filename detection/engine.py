@@ -105,9 +105,14 @@ def analyze_events(events):
 
 # Load normalized events from the local JSON file.
 def load_events():
-    with EVENT_FILE.open("r", encoding="utf-8") as file:
-        return json.load(file)
+    request = Request(
+        f"{API_BASE_URL}/events",
+        headers=api_headers(),
+        method="GET",
+    )
 
+    with urlopen(request, timeout=5) as response:
+        return json.loads(response.read().decode("utf-8"))
 
 # Convert timestamps into a consistent ISO-8601 format.
 def normalize_timestamp(value):
