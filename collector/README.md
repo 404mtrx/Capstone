@@ -92,6 +92,27 @@ For testing with real attack traffic, the public Loghub OpenSSH log
 changes: 2,000 lines → 520 events (519 failed logins, 1 success). It is not
 committed to this repository.
 
+## CSE-CIC-IDS2018 dataset (labeled attack traffic)
+
+`cic_flows.py` reads the labeled flow CSVs of the Canadian Institute for
+Cybersecurity's CSE-CIC-IDS2018 dataset and writes events in the same schema
+(`source: network`, `event_type: network_flow`, with `destination_port`,
+`protocol` and the attack `label`). Attack rows are `medium` severity and
+benign rows `low`.
+
+```bash
+python3 collector/cic_flows.py ~/cic-ids2018/2018-02-14.csv --summary-only
+python3 collector/cic_flows.py ~/cic-ids2018/2018-02-14.csv \
+    --labels SSH-Bruteforce,FTP-BruteForce,Benign --every 100 -o cic_events.json
+python3 collector/send_events.py cic_events.json
+```
+
+The CSVs have no IP addresses, so rules that group by source IP do not fire on
+these events; they are for search, dashboards and measuring detection against
+known labels. Download steps, our findings and the citation are in
+[cic_sample/README.md](cic_sample/README.md). Dataset files stay outside the
+repository.
+
 ## Tests
 
 ```bash
