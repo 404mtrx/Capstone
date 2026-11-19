@@ -1,214 +1,53 @@
-
-import { useState } from 'react'
-import {
-  Monitor,
-  Server,
-  Search,
-  Wifi,
-  WifiOff,
-} from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Monitor, Search } from 'lucide-react'
+import { api, type ApiEvent } from '../api'
 import './DevicesPage.css'
 
-type DeviceStatus = 'Online' | 'Offline'
-type DeviceType = 'Server' | 'Workstation'
+type ObservedHost = { name: string; latest: number | null; count: number }
 
-type Device = {
-  id: string
-  name: string
-  type: DeviceType
-  ipAddress: string
-  status: DeviceStatus
-  lastSeen: string
-  logCount: number
-}
-
-const sampleDevices: Device[] = [
-  {
-    id: 'DEV-001',
-    name: 'SERVER-01',
-    type: 'Server',
-    ipAddress: '192.168.1.105',
-    status: 'Online',
-    lastSeen: '2 minutes ago',
-    logCount: 1250,
-  },
-  {
-    id: 'DEV-002',
-    name: 'PC-ADMIN',
-    type: 'Workstation',
-    ipAddress: '192.168.1.110',
-    status: 'Online',
-    lastSeen: '5 minutes ago',
-    logCount: 845,
-  },
-  {
-    id: 'DEV-003',
-    name: 'PC-004',
-    type: 'Workstation',
-    ipAddress: '192.168.1.120',
-    status: 'Online',
-    lastSeen: '8 minutes ago',
-    logCount: 420,
-  },
-  {
-    id: 'DEV-004',
-    name: 'PC-007',
-    type: 'Workstation',
-    ipAddress: '192.168.1.130',
-    status: 'Offline',
-    lastSeen: '3 hours ago',
-    logCount: 210,
-  },
-  {
-    id: 'DEV-005',
-    name: 'SERVER-02',
-    type: 'Server',
-    ipAddress: '192.168.1.140',
-    status: 'Online',
-    lastSeen: '1 minute ago',
-    logCount: 1680,
-  },
-]
-
-function DevicesPage() {
+export default function DevicesPage({ token }: { token: string }) {
+  const [events, setEvents] = useState<ApiEvent[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('All')
-
-  const onlineCount = sampleDevices.filter(
-    device => device.status === 'Online'
-  ).length
-
-  const offlineCount = sampleDevices.length - onlineCount
-
-  const filteredDevices = sampleDevices.filter(device => {
-    const matchesStatus =
-      statusFilter === 'All' || device.status === statusFilter
-
-    const matchesSearch =
-      `${device.name} ${device.type} ${device.ipAddress}`
-        .toLowerCase()
-        .includes(search.toLowerCase())
-
-    return matchesStatus && matchesSearch
-  })
-
-  return (
-    <section className="devices-page">
-      <div className="devices-heading">
-        <div>
-          <h2>Monitored Devices</h2>
-          <p>
-            View the computers and servers connected to SentinelWatch.
-          </p>
-        </div>
-        <Monitor size={28} />
-      </div>
-
-      <div className="devices-summary">
-        <div className="device-summary-card">
-          <span>Total Devices</span>
-          <strong>{sampleDevices.length}</strong>
-        </div>
-
-        <div className="device-summary-card">
-          <span>Online Devices</span>
-          <strong className="device-count-online">
-            {onlineCount}
-          </strong>
-        </div>
-
-        <div className="device-summary-card">
-          <span>Offline Devices</span>
-          <strong className="device-count-offline">
-            {offlineCount}
-          </strong>
-        </div>
-      </div>
-
-      <div className="devices-toolbar">
-        <div className="devices-search">
-          <Search size={18} />
-          <input
-            type="search"
-            placeholder="Search devices or IP addresses..."
-            value={search}
-            onChange={event => setSearch(event.target.value)}
-          />
-        </div>
-
-        <select
-          aria-label="Filter devices by status"
-          value={statusFilter}
-          onChange={event => setStatusFilter(event.target.value)}
-        >
-          <option value="All">All Devices</option>
-          <option value="Online">Online</option>
-          <option value="Offline">Offline</option>
-        </select>
-      </div>
-
-      <div className="devices-table-wrapper">
-        <table className="security-devices-table">
-          <thead>
-            <tr>
-              <th>Device</th>
-              <th>Type</th>
-              <th>IP Address</th>
-              <th>Status</th>
-              <th>Last Seen</th>
-              <th>Logs</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {filteredDevices.map(device => (
-              <tr key={device.id}>
-                <td>
-                  <div className="device-name-cell">
-                    {device.type === 'Server' ? (
-                      <Server size={18} />
-                    ) : (
-                      <Monitor size={18} />
-                    )}
-                    <strong>{device.name}</strong>
-                  </div>
-                </td>
-
-                <td>{device.type}</td>
-                <td>{device.ipAddress}</td>
-
-                <td>
-                  <span
-                    className={`device-status ${device.status.toLowerCase()}`}
-                  >
-                    {device.status === 'Online' ? (
-                      <Wifi size={14} />
-                    ) : (
-                      <WifiOff size={14} />
-                    )}
-                    {device.status}
-                  </span>
-                </td>
-
-                <td>{device.lastSeen}</td>
-                <td>{device.logCount.toLocaleString()}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {filteredDevices.length === 0 && (
-          <p className="devices-empty">
-            No matching devices found.
-          </p>
-        )}
-      </div>
-
-      <p className="devices-footer">
-        Showing {filteredDevices.length} of {sampleDevices.length} sample devices
-      </p>
-    </section>
-  )
+  const [refresh, setRefresh] = useState(0)
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    setError('')
+    setEvents([])
+    async function load() {
+      try {
+        const data: unknown = await api<unknown>(token, '/events?size=500')
+        if (!Array.isArray(data) || !data.every(event => event && typeof event.timestamp === 'string')) throw new Error('Unexpected events response.')
+        if (!cancelled) setEvents(data)
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : 'Could not load observed hosts.')
+      } finally { if (!cancelled) setLoading(false) }
+    }
+    void load()
+    return () => { cancelled = true }
+  }, [token, refresh])
+  const hosts = new Map<string, ObservedHost>()
+  for (const event of events) {
+    const name = event.hostname?.trim()
+    // Remote source IPs can belong to attackers, so do not treat them as managed devices.
+    if (!name) continue
+    const time = Date.parse(event.timestamp)
+    const previous = hosts.get(name)
+    hosts.set(name, { name, count: (previous?.count || 0) + 1,
+      latest: Number.isFinite(time) ? Math.max(previous?.latest ?? -Infinity, time) : previous?.latest ?? null })
+  }
+  const all = Array.from(hosts.values()).sort((a, b) => a.name.localeCompare(b.name))
+  const filtered = all.filter(host => host.name.toLowerCase().includes(search.trim().toLowerCase()))
+  const unassociated = events.filter(event => !event.hostname?.trim()).length
+  return <section className="devices-page">
+    <div className="devices-heading"><div><h2>Hosts Observed in Logs</h2><p>Hostnames found in up to 500 returned events. This is not a complete managed-device inventory.</p></div><Monitor size={28}/></div>
+    <div className="devices-summary"><div className="device-summary-card"><span>Observed hostnames</span><strong>{loading || error ? '—' : all.length}</strong></div><div className="device-summary-card"><span>Events in this view</span><strong>{loading || error ? '—' : events.length}</strong></div><div className="device-summary-card"><span>Connection status</span><strong>Unknown</strong></div></div>
+    <p>Online/offline state, device type, and host IP are unavailable from this data. Event source IPs may identify remote clients rather than the host.</p>
+    <div className="devices-toolbar"><div className="devices-search"><Search size={18}/><input type="search" aria-label="Search observed hostnames" placeholder="Search hostnames…" value={search} onChange={event => setSearch(event.target.value)}/></div><button type="button" disabled={loading} onClick={() => setRefresh(value => value + 1)}>{loading ? 'Loading…' : 'Refresh hosts'}</button></div>
+    {error && <p role="alert">{error}</p>}
+    {loading && <p role="status">Loading observed hosts…</p>}
+    {!loading && !error && <><div className="devices-table-wrapper"><table className="security-devices-table"><thead><tr><th>Hostname</th><th>Connection</th><th>Latest event time</th><th>Events in this view</th></tr></thead><tbody>{filtered.map(host => <tr key={host.name}><td><strong>{host.name}</strong></td><td>Unknown</td><td>{host.latest === null ? 'Unknown' : new Date(host.latest).toLocaleString()}</td><td>{host.count}</td></tr>)}</tbody></table>{filtered.length === 0 && <p className="devices-empty">{all.length ? 'No matching hostnames.' : 'No hostnames found in returned events.'}</p>}</div><p className="devices-footer">Showing {filtered.length} of {all.length} observed hostnames. {unassociated} returned events have no hostname. Counts apply only to this event sample.</p></>}
+  </section>
 }
-
-export default DevicesPage

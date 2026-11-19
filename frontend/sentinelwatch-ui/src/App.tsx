@@ -190,7 +190,7 @@ function App() {
           </div>
 
           <span className="demo-badge">
-            {LIVE_PAGES.includes(activePage) ? 'Live Data' : 'Sample Data'}
+            {activePage === 'Devices' ? 'Observed Hosts' : activePage === 'Rules' ? 'Rule Catalog' : activePage === 'Settings' ? 'Settings' : LIVE_PAGES.includes(activePage) ? 'Live Data' : 'Sample Data'}
           </span>
         </header>
 
@@ -249,7 +249,7 @@ function App() {
         ) : activePage === 'Logs' ? (
           <LogsPage token={accessToken} />
         ) : activePage === 'Devices' ? (
-          <DevicesPage />
+          <DevicesPage token={accessToken} />
         ) : activePage === 'Rules' ? (
           <RulesPage />
         ) : activePage === 'Reports' ? (
