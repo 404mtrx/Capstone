@@ -1,0 +1,72 @@
+=== TC-AUTH-01 no token on a protected endpoint (expect 401) ===
+HTTP 401
+
+=== TC-AUTH-02 wrong password (expect 401) ===
+HTTP/1.1 401 Unauthorized
+{"detail":"Incorrect username or password"}
+
+=== create admin with the CLI (ok if it already exists) ===
+Created admin 'authadmin'.
+
+=== TC-AUTH-03 login returns a token and the role ===
+token starts: eyJhbGciOiJIUzI1NiIs...
+{"id":1,"username":"authadmin","role":"admin","is_active":true}
+
+=== TC-AUTH-04 admin creates an analyst and a lead ===
+{"id":2,"username":"analyst20413","role":"analyst","is_active":true}
+{"id":3,"username":"lead20413","role":"lead","is_active":true}
+
+=== TC-AUTH-05 password under 12 characters refused by the API (expect 422) ===
+HTTP 422
+
+=== TC-RBAC-01 analyst cannot manage users or read audit (expect 403, 403) ===
+HTTP 403
+HTTP 403
+
+=== TC-RBAC-02 analyst cannot read metrics (403); lead can (200) ===
+HTTP 403
+HTTP 200
+
+=== TC-RBAC-03 analyst cannot create alerts by hand (expect 403) ===
+HTTP 403
+
+=== TC-KEY-01 API key lets the engine post and read alerts (201, 200) ===
+{"status":"new","id":1,"source_ip":"10.0.0.9","reason":"auth test","assigned_to":null,"acknowledged_at":null,"rule_name":"Failed Login Detected","severity":"medium","source":null,"username":null,"evidence":null,"created_at":"2026-11-16T01:06:37.652527Z","closed_at":null}
+HTTP 200
+
+=== TC-KEY-02 wrong key refused (401); key does not open cases or triage (401, 401) ===
+HTTP 401
+HTTP 401
+HTTP 401
+
+=== TC-AUTH-06 tampered token refused (expect 401) ===
+HTTP 401
+
+=== TC-API-05 illegal transition new->escalated still 409 for an analyst ===
+HTTP/1.1 409 Conflict
+{"detail":"Cannot move alert from 'new' to 'escalated'"}
+
+=== triage as the analyst: investigate, open a case ===
+{"status":"investigating","id":1,"source_ip":"10.0.0.9","reason":"auth test","assigned_to":null,"acknowledged_at":"2026-11-16T01:06:37.747699Z","rule_name":"Failed Login Detected","severity":"medium","source":null,"username":null,"evidence":null,"created_at":"2026-11-16T01:06:37.652527Z","closed_at":null}
+{"status":"open","id":1,"owner_id":null,"closed_at":null,"notes":null,"alert_id":1,"title":"auth test case","opened_at":"2026-11-16T01:06:37.763910Z"}
+
+=== TC-AUDIT-01 admin reads the audit log (latest actions) ===
+2026-11-16T01:06:37 analyst20413     case_open            case 1 {'alert_id': 1, 'title': 'auth test case'}
+2026-11-16T01:06:37 analyst20413     alert_status_change  alert 1 {'from': 'new', 'to': 'investigating'}
+2026-11-16T01:06:37 lead20413        login_success        None None None
+2026-11-16T01:06:37 analyst20413     login_success        None None None
+2026-11-16T01:06:37 authadmin        user_create          user 3 {'username': 'lead20413', 'role': 'lead'}
+2026-11-16T01:06:37 authadmin        user_create          user 2 {'username': 'analyst20413', 'role': 'analyst'}
+2026-11-16T01:06:37 authadmin        login_success        None None None
+2026-11-16T01:06:37 cli              user_create          user 1 {'username': 'authadmin', 'role': 'admin'}
+
+=== TC-AUDIT-02 failed logins are recorded ===
+2026-11-16T01:06:36 authadmin login_failure
+
+=== TC-METRICS-01 lead reads the metrics ===
+{"start":null,"end":null,"total_alerts":1,"by_severity":{"low":0,"medium":1,"high":0,"critical":0},"by_status":{"new":0,"investigating":1,"escalated":0,"closed":0},"mean_time_to_acknowledge_seconds":0.1,"mean_time_to_close_seconds":null,"open_cases":1}
+
+=== TC-DB-03b migration check: current head ===
+b7e2f4a9c1d3 (head)
+
+ALL DONE

@@ -1,0 +1,30 @@
+=== TC-OS-01 containers healthy ===
+NAME                       IMAGE                                 COMMAND                  SERVICE      CREATED         STATUS                   PORTS
+sentinelwatch-opensearch   opensearchproject/opensearch:2.17.1   "./opensearch-docker…"   opensearch   4 minutes ago   Up 4 minutes (healthy)   127.0.0.1:9200->9200/tcp
+sentinelwatch-postgres     postgres:16                           "docker-entrypoint.s…"   postgres     6 minutes ago   Up 6 minutes (healthy)   127.0.0.1:5432->5432/tcp
+
+=== TC-OS-02 no credentials is refused (expect 401) ===
+HTTP 401
+
+=== TC-OS-03 wrong password is refused (expect 401) ===
+HTTP 401
+
+=== TC-OS-04 plain HTTP is not accepted (expect HTTP 000 or an error) ===
+HTTP 000
+
+=== TC-OS-05 the API's own user can log in (expect 200) ===
+HTTP 200
+
+=== TC-OS-06 the API user cannot read cluster settings or manage users (expect 403, 403) ===
+HTTP 403
+HTTP 403
+
+=== TC-OS-07 the API stores events through the login (expect 201, then the count) ===
+Sending 15 events to http://127.0.0.1:8000/events
+OK: HTTP 201 {'indexed': 15}
+{"count":15,"_shards":{"total":1,"successful":1,"skipped":0,"failed":0}}
+
+=== TC-OS-08 the API user cannot read any other index (expect 403) ===
+HTTP 403
+
+ALL DONE
