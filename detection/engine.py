@@ -167,12 +167,13 @@ def post_alert(alert):
 
 
 # Submit alerts while preventing duplicates from being stored.
-def submit_alerts(alerts):
+def submit_alerts(alerts, quiet=False):
+    posted = 0
     try:
         existing_alerts = get_existing_alerts()
     except (HTTPError, URLError, TimeoutError) as error:
         print(f"Could not read existing alerts: {error}")
-        return
+        return posted
 
     existing_keys = {
         alert_key(alert)
@@ -183,16 +184,18 @@ def submit_alerts(alerts):
         key = alert_key(alert)
 
         if key in existing_keys:
-            print(
-                "DUPLICATE SKIPPED:",
-                alert["rule_name"],
-                alert.get("source_ip"),
-            )
+            if not quiet:
+                print(
+                    "DUPLICATE SKIPPED:",
+                    alert["rule_name"],
+                    alert.get("source_ip"),
+                )
             continue
 
         try:
             saved_alert = post_alert(alert)
             existing_keys.add(key)
+            posted += 1
             print(
                 "ALERT POSTED:",
                 saved_alert.get("id"),
@@ -204,18 +207,24 @@ def submit_alerts(alerts):
                 f"{alert['rule_name']}: {error}"
             )
 
+    return posted
+
 
 # One detection pass: read events, run the rules, post any new alerts.
-def run_once():
+# quiet=True (watch mode) prints only when something new is posted.
+def run_once(quiet=False):
     events = load_events()
     alerts = analyze_events(events)
 
     if alerts:
-        for alert in alerts:
-            print("ALERT:", alert)
+        if not quiet:
+            for alert in alerts:
+                print("ALERT:", alert)
 
-        submit_alerts(alerts)
-    else:
+        posted = submit_alerts(alerts, quiet=quiet)
+        if quiet and posted:
+            print(f"{posted} new alert(s) posted.")
+    elif not quiet:
         print("NO ALERTS DETECTED")
 
 
@@ -239,10 +248,11 @@ if __name__ == "__main__":
         run_once()
     else:
         print(f"Watching for new events every {args.watch:g} seconds. Ctrl+C to stop.")
+        print("Only NEW alerts are printed; no output means nothing new.")
         try:
             while True:
                 try:
-                    run_once()
+                    run_once(quiet=True)
                 except (HTTPError, URLError, TimeoutError) as error:
                     print(f"API not reachable, will retry: {error}")
                 time.sleep(args.watch)
