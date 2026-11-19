@@ -106,7 +106,7 @@ def analyze_events(events):
 # Load normalized events from the local JSON file.
 def load_events():
     request = Request(
-        f"{API_BASE_URL}/events",
+        f"{API_BASE_URL}/events?size=500",
         headers=api_headers(),
         method="GET",
     )
@@ -167,7 +167,7 @@ def post_alert(alert):
 
 
 # Submit alerts while preventing duplicates from being stored.
-def submit_alerts(alerts, quiet=False):
+def submit_alerts(alerts, quiet=False, seen=None):
     posted = 0
     try:
         existing_alerts = get_existing_alerts()
@@ -179,6 +179,11 @@ def submit_alerts(alerts, quiet=False):
         alert_key(alert)
         for alert in existing_alerts
     }
+
+    # In watch mode, also remember every alert handled so far. The API only returns the
+    # newest 200 alerts, so without this a busy server would re-post older ones.
+    if seen is not None:
+        existing_keys |= seen
 
     for alert in alerts:
         key = alert_key(alert)
@@ -207,12 +212,15 @@ def submit_alerts(alerts, quiet=False):
                 f"{alert['rule_name']}: {error}"
             )
 
+    if seen is not None:
+        seen |= existing_keys
+
     return posted
 
 
 # One detection pass: read events, run the rules, post any new alerts.
 # quiet=True (watch mode) prints only when something new is posted.
-def run_once(quiet=False):
+def run_once(quiet=False, seen=None):
     events = load_events()
     alerts = analyze_events(events)
 
@@ -221,7 +229,7 @@ def run_once(quiet=False):
             for alert in alerts:
                 print("ALERT:", alert)
 
-        posted = submit_alerts(alerts, quiet=quiet)
+        posted = submit_alerts(alerts, quiet=quiet, seen=seen)
         if quiet and posted:
             print(f"{posted} new alert(s) posted.")
     elif not quiet:
@@ -249,10 +257,11 @@ if __name__ == "__main__":
     else:
         print(f"Watching for new events every {args.watch:g} seconds. Ctrl+C to stop.")
         print("Only NEW alerts are printed; no output means nothing new.")
+        seen = set()
         try:
             while True:
                 try:
-                    run_once(quiet=True)
+                    run_once(quiet=True, seen=seen)
                 except (HTTPError, URLError, TimeoutError) as error:
                     print(f"API not reachable, will retry: {error}")
                 time.sleep(args.watch)

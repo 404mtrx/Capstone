@@ -22,6 +22,14 @@ fi
 set -a; . ./.env; set +a
 DC="docker compose -f docker-compose.prod.yml"
 
+# The collector reads /var/log/auth.log. Some server images only keep logins in the journal,
+# so make sure the classic log file exists.
+if [ ! -f /var/log/auth.log ]; then
+  echo "== installing rsyslog so /var/log/auth.log exists =="
+  apt-get update -qq && apt-get install -y -qq rsyslog >/dev/null
+  systemctl enable --now rsyslog >/dev/null 2>&1 || true
+fi
+
 echo "== starting OpenSearch and Postgres =="
 $DC up -d postgres opensearch
 echo "== waiting for OpenSearch to be healthy (up to ~5 minutes) =="
