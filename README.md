@@ -133,7 +133,7 @@ uvicorn app.main:app --reload          # http://127.0.0.1:8000/docs
 export SENTINEL_API_KEY=<API_KEY from backend/.env>
 python3 collector/normalize_logs.py collector/sample_auth.log collector/sample_ufw.log collector/sample_access.log -o events.json
 python3 collector/send_events.py events.json
-python3 detection/engine.py
+python3 detection/engine.py            # one pass; add --watch 5 to keep checking every 5 s (live demo)
 
 # 4. Dashboard (third terminal)
 cd frontend/sentinelwatch-ui && npm install && npm run dev   # http://localhost:5173

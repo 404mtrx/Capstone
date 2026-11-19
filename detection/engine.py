@@ -205,8 +205,8 @@ def submit_alerts(alerts):
             )
 
 
-# Run the detection engine when this file is executed directly.
-if __name__ == "__main__":
+# One detection pass: read events, run the rules, post any new alerts.
+def run_once():
     events = load_events()
     alerts = analyze_events(events)
 
@@ -217,3 +217,34 @@ if __name__ == "__main__":
         submit_alerts(alerts)
     else:
         print("NO ALERTS DETECTED")
+
+
+# Run the detection engine when this file is executed directly.
+#   python3 detection/engine.py              one pass, then stop
+#   python3 detection/engine.py --watch 5    repeat every 5 seconds (live demo); Ctrl+C stops
+if __name__ == "__main__":
+    import argparse
+    import time
+
+    parser = argparse.ArgumentParser(description="SentinelWatch detection engine")
+    parser.add_argument(
+        "--watch",
+        type=float,
+        metavar="SECONDS",
+        help="keep running and check for new events every SECONDS seconds",
+    )
+    args = parser.parse_args()
+
+    if not args.watch:
+        run_once()
+    else:
+        print(f"Watching for new events every {args.watch:g} seconds. Ctrl+C to stop.")
+        try:
+            while True:
+                try:
+                    run_once()
+                except (HTTPError, URLError, TimeoutError) as error:
+                    print(f"API not reachable, will retry: {error}")
+                time.sleep(args.watch)
+        except KeyboardInterrupt:
+            print("Stopped.")

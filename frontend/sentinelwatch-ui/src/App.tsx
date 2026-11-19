@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Radar,
   LayoutDashboard,
@@ -19,6 +19,8 @@ import DevicesPage from './pages/DevicesPage'
 import RulesPage from './pages/RulesPage'
 import ReportsPage from './pages/ReportsPage'
 
+import { fetchAlerts, formatSeverity, type ApiAlert } from './api'
+
 import './App.css'
 
 type Theme = 'dark' | 'light'
@@ -33,16 +35,35 @@ const menuItems = [
   { name: 'Settings', icon: Settings },
 ]
 
-const threats = [
-  { name: 'Critical', count: 2, color: 'critical' },
-  { name: 'High', count: 5, color: 'high' },
-  { name: 'Medium', count: 8, color: 'medium' },
-  { name: 'Low', count: 12, color: 'low' },
-]
+const LIVE_PAGES = ['Dashboard', 'Alerts', 'Logs', 'Reports']
 
 function App() {
   const [activePage, setActivePage] = useState('Dashboard')
-  const [accessToken, setAccessToken] = useState<string | null>(null)
+  // The login token is kept for this browser tab only, so a page refresh does not log you out.
+  const [accessToken, setAccessToken] = useState<string | null>(() => {
+    try {
+      return sessionStorage.getItem('sentinelwatch-token')
+    } catch {
+      return null
+    }
+  })
+  const [liveAlerts, setLiveAlerts] = useState<ApiAlert[]>([])
+
+  // Alert counts for the sidebar and the dashboard, refreshed every 5 seconds.
+  useEffect(() => {
+    if (!accessToken) return
+    const token = accessToken
+    async function load() {
+      try {
+        setLiveAlerts(await fetchAlerts(token))
+      } catch {
+        // The Alerts page shows the error; keep the last numbers here.
+      }
+    }
+    void load()
+    const timer = setInterval(() => void load(), 5000)
+    return () => clearInterval(timer)
+  }, [accessToken])
 
   const [theme, setTheme] = useState<Theme>(() => {
     try {
@@ -65,18 +86,39 @@ function App() {
   }
 
   function handleLogin(token: string) {
+    try {
+      sessionStorage.setItem('sentinelwatch-token', token)
+    } catch {
+      // Login still works for this page view without storage.
+    }
     setAccessToken(token)
     setActivePage('Dashboard')
   }
 
   function handleLogout() {
+    try {
+      sessionStorage.removeItem('sentinelwatch-token')
+    } catch {
+      // nothing to clear
+    }
     setAccessToken(null)
+    setLiveAlerts([])
     setActivePage('Dashboard')
   }
 
   if (!accessToken) {
     return <LoginPage onLogin={handleLogin} />
   }
+
+  const openAlerts = liveAlerts.filter(alert => alert.status !== 'closed')
+  const threats = ['Critical', 'High', 'Medium', 'Low'].map(name => ({
+    name,
+    color: name.toLowerCase(),
+    count: openAlerts.filter(alert => formatSeverity(alert.severity) === name).length,
+  }))
+  const attention = openAlerts
+    .filter(alert => ['Critical', 'High'].includes(formatSeverity(alert.severity)))
+    .slice(0, 5)
 
   return (
     <div className={`app-layout theme-${theme}`}>
@@ -114,7 +156,7 @@ function App() {
                 </span>
 
                 {item.name === 'Alerts' && (
-                  <span className="alerts-counter">7</span>
+                  <span className="alerts-counter">{openAlerts.length}</span>
                 )}
               </button>
             )
@@ -147,7 +189,9 @@ function App() {
             <p>Welcome to your SentinelWatch security workspace.</p>
           </div>
 
-          <span className="demo-badge">Sample Data</span>
+          <span className="demo-badge">
+            {LIVE_PAGES.includes(activePage) ? 'Live Data' : 'Sample Data'}
+          </span>
         </header>
 
         {activePage === 'Dashboard' ? (
@@ -168,7 +212,7 @@ function App() {
                 >
                   <span>{threat.name} Threats</span>
                   <h2>{threat.count}</h2>
-                  <p>Detected security alerts</p>
+                  <p>Open security alerts</p>
                 </div>
               ))}
             </section>
@@ -177,33 +221,39 @@ function App() {
               <h2>Needs Your Attention</h2>
               <p>Important security events requiring review</p>
 
-              <div className="alert-row">
-                <div>
-                  <strong>Possible brute-force login attack</strong>
-                  <p>SERVER-01 · Multiple failed login attempts</p>
-                </div>
-                <span className="alert-badge critical-badge">Critical</span>
-              </div>
+              {attention.length === 0 && (
+                <p>No open critical or high alerts right now.</p>
+              )}
 
-              <div className="alert-row">
-                <div>
-                  <strong>Suspicious administrator login</strong>
-                  <p>PC-ADMIN · Unusual login activity</p>
-                </div>
-                <span className="alert-badge high-badge">High</span>
-              </div>
+              {attention.map(alert => {
+                const severity = formatSeverity(alert.severity)
+                return (
+                  <div className="alert-row" key={alert.id}>
+                    <div>
+                      <strong>{alert.rule_name}</strong>
+                      <p>
+                        {alert.source_ip || alert.source || alert.username || 'Unknown'}
+                        {alert.reason ? ` · ${alert.reason}` : ''}
+                      </p>
+                    </div>
+                    <span className={`alert-badge ${severity.toLowerCase()}-badge`}>
+                      {severity}
+                    </span>
+                  </div>
+                )
+              })}
             </section>
           </>
         ) : activePage === 'Alerts' ? (
           <AlertsPage token={accessToken} />
         ) : activePage === 'Logs' ? (
-          <LogsPage />
+          <LogsPage token={accessToken} />
         ) : activePage === 'Devices' ? (
           <DevicesPage />
         ) : activePage === 'Rules' ? (
           <RulesPage />
         ) : activePage === 'Reports' ? (
-          <ReportsPage />
+          <ReportsPage token={accessToken} />
         ) : activePage === 'Settings' ? (
           <>
             <section className="alerts-panel settings-panel">

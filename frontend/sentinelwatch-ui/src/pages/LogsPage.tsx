@@ -1,7 +1,8 @@
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Search, FileText } from 'lucide-react'
 import './LogsPage.css'
+import { api, type ApiEvent } from '../api'
 
 type LogLevel = 'Info' | 'Warning' | 'Error'
 
@@ -14,54 +15,41 @@ type SecurityLog = {
   ipAddress: string
 }
 
-const sampleLogs: SecurityLog[] = [
-  {
-    id: 'LOG-001',
-    timestamp: '2026-10-12 10:42:15',
-    source: 'SERVER-01',
-    event: 'Failed login attempt',
-    level: 'Warning',
-    ipAddress: '192.168.1.105'
-  },
-  {
-    id: 'LOG-002',
-    timestamp: '2026-10-12 10:25:30',
-    source: 'PC-ADMIN',
-    event: 'Administrator login successful',
-    level: 'Info',
-    ipAddress: '192.168.1.110'
-  },
-  {
-    id: 'LOG-003',
-    timestamp: '2026-10-12 09:30:45',
-    source: 'PC-004',
-    event: 'Multiple authentication failures',
-    level: 'Error',
-    ipAddress: '192.168.1.120'
-  },
-  {
-    id: 'LOG-004',
-    timestamp: '2026-10-12 08:15:00',
-    source: 'PC-007',
-    event: 'User login outside business hours',
-    level: 'Warning',
-    ipAddress: '192.168.1.130'
-  },
-  {
-    id: 'LOG-005',
-    timestamp: '2026-10-12 07:55:10',
-    source: 'SERVER-02',
-    event: 'System service started',
-    level: 'Info',
-    ipAddress: '192.168.1.140'
+function toLog(event: ApiEvent, index: number): SecurityLog {
+  const severity = event.severity.toLowerCase()
+  return {
+    id: `${event.timestamp}-${index}`,
+    timestamp: new Date(event.timestamp).toLocaleString(),
+    source: event.hostname || event.source,
+    event: `${event.event_type.replace(/_/g, ' ')}${event.username ? ` (${event.username})` : ''}`,
+    level: severity === 'high' || severity === 'critical' ? 'Error' : severity === 'medium' ? 'Warning' : 'Info',
+    ipAddress: event.source_ip || '-',
   }
-]
+}
 
-function LogsPage() {
+function LogsPage({ token }: { token: string }) {
   const [search, setSearch] = useState('')
   const [level, setLevel] = useState('All')
+  const [logs, setLogs] = useState<SecurityLog[]>([])
+  const [error, setError] = useState('')
 
-  const filteredLogs = sampleLogs.filter(log => {
+  // Newest events from OpenSearch, refreshed every 10 seconds.
+  useEffect(() => {
+    async function load() {
+      try {
+        const events = await api<ApiEvent[]>(token, '/events?size=200')
+        setLogs(events.map(toLog))
+        setError('')
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Could not load events.')
+      }
+    }
+    void load()
+    const timer = setInterval(() => void load(), 10000)
+    return () => clearInterval(timer)
+  }, [token])
+
+  const filteredLogs = logs.filter(log => {
     const matchesLevel = level === 'All' || log.level === level
     const matchesSearch =
       `${log.id} ${log.source} ${log.event} ${log.ipAddress}`
@@ -133,13 +121,16 @@ function LogsPage() {
           </tbody>
         </table>
 
-        {filteredLogs.length === 0 && (
-          <p className="logs-empty">No matching logs found.</p>
+        {error && <p className="logs-empty">{error}</p>}
+        {!error && filteredLogs.length === 0 && (
+          <p className="logs-empty">
+            {logs.length === 0 ? 'No events collected yet.' : 'No matching logs found.'}
+          </p>
         )}
       </div>
 
       <p className="logs-footer">
-        Showing {filteredLogs.length} of {sampleLogs.length} sample log events
+        Showing {filteredLogs.length} of {logs.length} recent collected events
       </p>
     </section>
   )
