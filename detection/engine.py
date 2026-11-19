@@ -167,7 +167,29 @@ def post_alert(alert):
 
 
 # Submit alerts while preventing duplicates from being stored.
-def submit_alerts(alerts, quiet=False, seen=None):
+# cooldown (watch mode): after an alert is posted, the same rule + source IP stays quiet for
+# `cooldown` seconds of event time, so one attacker gives one alert instead of one per attempt.
+# last_posted remembers the event time of the last alert per (rule, source IP).
+def alert_time(alert):
+    value = normalize_timestamp(alert.get("timestamp") or alert.get("created_at"))
+    try:
+        return datetime.fromisoformat(value) if value else None
+    except (ValueError, TypeError):
+        return None
+
+
+def in_cooldown(alert, last_posted, cooldown):
+    when = alert_time(alert)
+    last = last_posted.get((alert.get("rule_name"), alert.get("source_ip")))
+    if not cooldown or when is None or last is None:
+        return False
+    try:
+        return abs((when - last).total_seconds()) < cooldown
+    except TypeError:  # one timestamp has a timezone and the other does not
+        return False
+
+
+def submit_alerts(alerts, quiet=False, seen=None, last_posted=None, cooldown=0):
     posted = 0
     try:
         existing_alerts = get_existing_alerts()
@@ -197,9 +219,16 @@ def submit_alerts(alerts, quiet=False, seen=None):
                 )
             continue
 
+        if last_posted is not None and in_cooldown(alert, last_posted, cooldown):
+            existing_keys.add(key)
+            continue
+
         try:
             saved_alert = post_alert(alert)
             existing_keys.add(key)
+            when = alert_time(alert)
+            if last_posted is not None and when is not None:
+                last_posted[(alert.get("rule_name"), alert.get("source_ip"))] = when
             posted += 1
             print(
                 "ALERT POSTED:",
@@ -220,7 +249,7 @@ def submit_alerts(alerts, quiet=False, seen=None):
 
 # One detection pass: read events, run the rules, post any new alerts.
 # quiet=True (watch mode) prints only when something new is posted.
-def run_once(quiet=False, seen=None):
+def run_once(quiet=False, seen=None, last_posted=None, cooldown=0):
     events = load_events()
     alerts = analyze_events(events)
 
@@ -229,7 +258,7 @@ def run_once(quiet=False, seen=None):
             for alert in alerts:
                 print("ALERT:", alert)
 
-        posted = submit_alerts(alerts, quiet=quiet, seen=seen)
+        posted = submit_alerts(alerts, quiet=quiet, seen=seen, last_posted=last_posted, cooldown=cooldown)
         if quiet and posted:
             print(f"{posted} new alert(s) posted.")
     elif not quiet:
@@ -250,6 +279,13 @@ if __name__ == "__main__":
         metavar="SECONDS",
         help="keep running and check for new events every SECONDS seconds",
     )
+    parser.add_argument(
+        "--cooldown",
+        type=float,
+        default=600,
+        metavar="SECONDS",
+        help="watch mode: one alert per rule and source IP per SECONDS (default 600; 0 = alert on everything)",
+    )
     args = parser.parse_args()
 
     if not args.watch:
@@ -258,10 +294,11 @@ if __name__ == "__main__":
         print(f"Watching for new events every {args.watch:g} seconds. Ctrl+C to stop.")
         print("Only NEW alerts are printed; no output means nothing new.")
         seen = set()
+        last_posted = {}
         try:
             while True:
                 try:
-                    run_once(quiet=True, seen=seen)
+                    run_once(quiet=True, seen=seen, last_posted=last_posted, cooldown=args.cooldown)
                 except (HTTPError, URLError, TimeoutError) as error:
                     print(f"API not reachable, will retry: {error}")
                 time.sleep(args.watch)
