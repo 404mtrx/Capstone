@@ -90,3 +90,8 @@ No token gives 401; a signed-in user with the wrong role gives 403.
   (needs `AUTH_REQUIRED=true` and `API_KEY` in `backend/.env`, and the API running).
 - Both save their output in `docs/test-evidence/`.
 - Create the first administrator with `python -m app.create_user <name> --role admin`; after that, administrators create users with `POST /users`.
+
+## Putting the site on the internet (one small server)
+
+See `deploy/README.md`. It runs everything with Docker behind Caddy (automatic HTTPS). Only
+ports 80 and 443 are open; Postgres, OpenSearch and the API stay private.
