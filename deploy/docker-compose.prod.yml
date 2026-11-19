@@ -51,6 +51,35 @@ services:
       API_KEY: ${API_KEY}
       CORS_ORIGINS: https://${SITE_ADDRESS}
 
+  # Detection engine: checks for new events every 5 seconds and creates alerts.
+  engine:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.pipeline
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      SENTINEL_API_URL: http://api:8000
+      SENTINEL_API_KEY: ${API_KEY}
+    command: ["python", "detection/engine.py", "--watch", "5"]
+
+  # Collector: watches this server's own login log and sends new lines to the API.
+  # The host's /var/log is mounted read-only.
+  collector:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.pipeline
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      SENTINEL_API_KEY: ${API_KEY}
+    volumes:
+      - /var/log:/host-log:ro
+      - collector_state:/state
+    command: ["python", "collector/follow_logs.py", "/host-log/auth.log", "--url", "http://api:8000/events", "--state", "/state/collector.json"]
+
   web:
     build:
       context: ..
@@ -70,3 +99,4 @@ volumes:
   pgdata:
   osdata:
   caddy_data:
+  collector_state:

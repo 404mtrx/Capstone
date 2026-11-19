@@ -18,3 +18,16 @@ Send logs from your own machine to the public site:
 
 Update after a code change: `git pull && docker compose -f deploy/docker-compose.prod.yml up -d --build`.
 Logs: `docker compose -f deploy/docker-compose.prod.yml logs -f api`.
+
+## Everything runs by itself (no laptops needed)
+
+`docker compose -f deploy/docker-compose.prod.yml up -d` starts, and restarts after a reboot or crash:
+the website, the API, Postgres, OpenSearch, the **detection engine** (`engine`) and a **collector** that
+reads this server's own `/var/log/auth.log`. A public server receives real SSH login attempts from the
+internet, so alerts appear without anyone running a terminal.
+
+- Watch them: `docker compose -f deploy/docker-compose.prod.yml logs -f engine collector`
+- Make your own test attack (from any computer): `ssh nosuchuser@YOUR-IP` and type a wrong password a few times.
+  The failed logins show up in Logs, and the engine raises alerts within about 10 seconds.
+- Logs from another machine (for example the lab VM) can still be sent with `collector/follow_logs.py` and
+  the API key, as described above.
