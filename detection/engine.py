@@ -36,7 +36,7 @@ except ImportError:
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 EVENT_FILE = BASE_DIR / "normalized_events.json"
-API_BASE_URL = "http://localhost:8000"
+API_BASE_URL = os.environ.get("SENTINEL_API_URL", "http://localhost:8000")  # set to the public site + /api when deployed
 
 
 # The backend asks for an API key (X-API-Key). Set it in the environment: export SENTINEL_API_KEY=...

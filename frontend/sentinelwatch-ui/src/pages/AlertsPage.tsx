@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Search, AlertTriangle, Eye } from 'lucide-react'
 import './AlertsPage.css'
+import { API_URL } from '../config'
 
 type Severity = 'Critical' | 'High' | 'Medium' | 'Low'
 
@@ -52,7 +53,7 @@ function AlertsPage({ token }: { token: string }) {
   useEffect(() => {
     async function loadAlerts() {
       try {
-        const response = await fetch('http://127.0.0.1:8000/alerts', {
+        const response = await fetch(`${API_URL}/alerts`, {
   headers: {
     Authorization: `Bearer ${token}`,
   },

@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Radar, Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import './LoginPage.css'
+import { API_URL } from '../config'
 
 type LoginPageProps = {
   onLogin: (token: string) => void
@@ -19,7 +20,7 @@ function LoginPage({ onLogin }: LoginPageProps) {
     setLoading(true)
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/auth/login', {
+      const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: username.trim(), password }),

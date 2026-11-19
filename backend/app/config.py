@@ -21,6 +21,10 @@ class Settings(BaseSettings):
     access_token_minutes: int = 60
     api_key: str = ""  # shared key for the collector and detection engine (X-API-Key)
 
+    # Browser origins allowed to call the API, comma separated. A deployed site served from the
+    # same address as the API does not need this; set it only if the site is on another address.
+    cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 
