@@ -21,3 +21,4 @@ dist/
 # Collector follow-mode read positions
 .collector_state.json
 .collector_state.json.tmp
+cic_events.json

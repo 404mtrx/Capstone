@@ -1,0 +1,28 @@
+== CIC-IDS2018 full-day summary ==
+SentinelWatch CIC-IDS2018 Flow Reader
+Events: 1048575
+  Benign: 667626   top destination ports: 53 (198162), 80 (130899), 443 (92119)
+  FTP-BruteForce: 193360   top destination ports: 21 (193360)
+  SSH-Bruteforce: 187589   top destination ports: 22 (187559), 21 (30)
+
+== Sample sent to API ==
+Sending 10486 events to http://127.0.0.1:8000/events
+OK: HTTP 201 {'indexed': 10486}
+
+== Tests ==
+============================= test session starts ==============================
+platform darwin -- Python 3.13.7, pytest-9.1.1, pluggy-1.7.0 -- /Users/kritikathapamagar/CSCE4907/Capstone/backend/.venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /Users/kritikathapamagar/CSCE4907/Capstone
+plugins: anyio-4.15.1
+collecting ... collected 7 items
+
+tests/test_cic_flows.py::test_timestamp_day_first_to_utc PASSED          [ 14%]
+tests/test_cic_flows.py::test_flow_row_becomes_event PASSED              [ 28%]
+tests/test_cic_flows.py::test_benign_flow_is_low_severity_and_udp_mapped PASSED [ 42%]
+tests/test_cic_flows.py::test_sample_file_counts_and_skips_bad_rows PASSED [ 57%]
+tests/test_cic_flows.py::test_label_filter_sampling_and_limit PASSED     [ 71%]
+tests/test_cic_flows.py::test_event_ids_are_unique PASSED                [ 85%]
+tests/test_cic_flows.py::test_cli_writes_json PASSED                     [100%]
+
+============================== 7 passed in 0.02s ===============================
