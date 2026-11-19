@@ -1,5 +1,5 @@
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Download,
   ShieldAlert,
@@ -8,6 +8,7 @@ import {
   Activity,
 } from 'lucide-react'
 import './ReportsPage.css'
+import { fetchAlerts, formatSeverity, type ApiAlert } from '../api'
 
 type Period = '7' | '30' | '90'
 
@@ -21,66 +22,54 @@ type Report = {
   reviewed: number
 }
 
-const reports: Record<Period, Report> = {
-  '7': {
-    total: 27,
-    critical: 2,
-    high: 5,
-    medium: 8,
-    low: 12,
-    devices: 5,
-    reviewed: 18,
-  },
-  '30': {
-    total: 94,
-    critical: 8,
-    high: 20,
-    medium: 31,
-    low: 35,
-    devices: 5,
-    reviewed: 73,
-  },
-  '90': {
-    total: 268,
-    critical: 19,
-    high: 54,
-    medium: 91,
-    low: 104,
-    devices: 5,
-    reviewed: 221,
-  },
+function buildReport(alerts: ApiAlert[], period: Period): Report {
+  const since = Date.now() - Number(period) * 24 * 60 * 60 * 1000
+  const inPeriod = alerts.filter(
+    alert => !alert.created_at || new Date(alert.created_at).getTime() >= since
+  )
+  const count = (level: string) =>
+    inPeriod.filter(alert => formatSeverity(alert.severity) === level).length
+  const devices = new Set(
+    inPeriod.map(alert => alert.source_ip || alert.source || alert.username).filter(Boolean)
+  )
+
+  return {
+    total: inPeriod.length,
+    critical: count('Critical'),
+    high: count('High'),
+    medium: count('Medium'),
+    low: count('Low'),
+    devices: devices.size,
+    reviewed: inPeriod.filter(alert => alert.status !== 'new').length,
+  }
 }
 
-const events = [
-  {
-    id: 'EVT-001',
-    event: 'Multiple failed login attempts',
-    source: 'SERVER-01',
-    severity: 'Critical',
-  },
-  {
-    id: 'EVT-002',
-    event: 'Suspicious administrator login',
-    source: 'PC-ADMIN',
-    severity: 'High',
-  },
-  {
-    id: 'EVT-003',
-    event: 'Unusual network connection',
-    source: 'PC-004',
-    severity: 'Medium',
-  },
-  {
-    id: 'EVT-004',
-    event: 'System configuration change',
-    source: 'SERVER-02',
-    severity: 'Low',
-  },
-]
-
-function ReportsPage() {
+function ReportsPage({ token }: { token: string }) {
   const [period, setPeriod] = useState<Period>('7')
-  const report = reports[period]
+  const [alerts, setAlerts] = useState<ApiAlert[]>([])
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    async function load() {
+      try {
+        setAlerts(await fetchAlerts(token))
+        setError('')
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Could not load alerts.')
+      }
+    }
+    void load()
+    const timer = setInterval(() => void load(), 10000)
+    return () => clearInterval(timer)
+  }, [token])
+
+  const report = buildReport(alerts, period)
+  const events = alerts.slice(0, 5).map(alert => ({
+    id: String(alert.id),
+    event: alert.rule_name,
+    source: alert.source_ip || alert.source || alert.username || 'Unknown',
+    severity: formatSeverity(alert.severity),
+  }))
 
   const severities = [
     { name: 'Critical', count: report.critical, type: 'critical' },
@@ -91,7 +80,7 @@ function ReportsPage() {
 
   function exportCSV() {
     const rows = [
-      ['SentinelWatch Demo Security Report'],
+      ['SentinelWatch Security Report'],
       ['Reporting Period', `Last ${period} days`],
       [],
       ['Metric', 'Count'],
@@ -100,10 +89,10 @@ function ReportsPage() {
       ['High Alerts', report.high],
       ['Medium Alerts', report.medium],
       ['Low Alerts', report.low],
-      ['Monitored Devices', report.devices],
-      ['Reviewed Alerts', report.reviewed],
+      ['Distinct sources', report.devices],
+      ['Alerts past Open', report.reviewed],
       [],
-      ['Recent Demo Event', 'Source', 'Severity'],
+      ['Recent Alert', 'Source', 'Severity'],
       ...events.map(item => [
         item.event,
         item.source,
@@ -127,7 +116,7 @@ function ReportsPage() {
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
-    link.download = `sentinelwatch-demo-${period}-days.csv`
+    link.download = `sentinelwatch-report-${period}-days.csv`
     document.body.appendChild(link)
     link.click()
     link.remove()
@@ -185,13 +174,13 @@ function ReportsPage() {
 
         <div className="report-stat-card">
           <Monitor size={24} />
-          <span>Monitored Devices</span>
+          <span>Distinct Sources</span>
           <strong>{report.devices}</strong>
         </div>
 
         <div className="report-stat-card">
           <CheckCircle size={24} />
-          <span>Reviewed Alerts</span>
+          <span>Alerts Past Open</span>
           <strong>{report.reviewed}</strong>
         </div>
       </div>
@@ -226,7 +215,7 @@ function ReportsPage() {
 
       <div className="reports-panel">
         <h3>Recent Security Events</h3>
-        <p>Illustrative events for the frontend demonstration.</p>
+        <p>The five newest alerts from the detection engine.</p>
 
         <div className="reports-table-wrapper">
           <table className="reports-table">
@@ -257,9 +246,9 @@ function ReportsPage() {
         </div>
       </div>
 
+      {error && <p className="reports-disclaimer">{error}</p>}
       <p className="reports-disclaimer">
-        Sample Data — Reports are for demonstration only.
-        They do not represent live security monitoring.
+        Live data from the SentinelWatch API (refreshes every 10 seconds).
       </p>
     </section>
   )

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Search, AlertTriangle, Eye } from 'lucide-react'
 import './AlertsPage.css'
-import { API_URL } from '../config'
+import { api, fetchAlerts, formatSeverity, formatStatus } from '../api'
 
 type Severity = 'Critical' | 'High' | 'Medium' | 'Low'
 
@@ -13,32 +13,15 @@ type Alert = {
   time: string
   description: string
   status: string
+  rawStatus: string
 }
 
-type ApiAlert = {
-  id: number | string
-  rule_name: string
-  severity: string
-  status: string
-  source?: string | null
-  source_ip?: string | null
-  username?: string | null
-  reason?: string | null
-  created_at?: string | null
-}
-
-function formatSeverity(value: string): Severity {
-  const severity = value.toLowerCase()
-
-  if (severity === 'critical') return 'Critical'
-  if (severity === 'high') return 'High'
-  if (severity === 'medium') return 'Medium'
-  return 'Low'
-}
-
-function formatStatus(value: string): string {
-  if (!value || value.toLowerCase() === 'new') return 'Open'
-  return value.charAt(0).toUpperCase() + value.slice(1)
+// Which status each alert may move to next (the backend enforces the same rules).
+const NEXT_STATUS: Record<string, [string, string][]> = {
+  new: [['investigating', 'Start investigating'], ['closed', 'Close alert']],
+  investigating: [['escalated', 'Escalate'], ['closed', 'Close alert']],
+  escalated: [['investigating', 'Back to investigating'], ['closed', 'Close alert']],
+  closed: [['investigating', 'Reopen']],
 }
 
 function AlertsPage({ token }: { token: string }) {
@@ -48,22 +31,17 @@ function AlertsPage({ token }: { token: string }) {
   const [filter, setFilter] = useState('All')
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<Alert | null>(null)
-  const [reviewed, setReviewed] = useState<string[]>([])
+  const [notice, setNotice] = useState('')
+  const [busy, setBusy] = useState(false)
 
+  const [refresh, setRefresh] = useState(0)
+
+  // Load now, then every 5 seconds so new alerts appear on their own.
+  // Calling reload() (after a change) loads again straight away.
   useEffect(() => {
-    async function loadAlerts() {
+    async function load() {
       try {
-        const response = await fetch(`${API_URL}/alerts`, {
-  headers: {
-    Authorization: `Bearer ${token}`,
-  },
-})
-
-        if (!response.ok) {
-          throw new Error(`Could not load alerts (HTTP ${response.status})`)
-        }
-
-        const data: ApiAlert[] = await response.json()
+        const data = await fetchAlerts(token)
 
         setAlerts(
           data.map(alert => ({
@@ -76,8 +54,10 @@ function AlertsPage({ token }: { token: string }) {
               : 'Unknown time',
             description: alert.reason || 'No description provided.',
             status: formatStatus(alert.status),
+            rawStatus: alert.status,
           }))
         )
+        setError('')
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Could not load alerts.')
       } finally {
@@ -85,8 +65,14 @@ function AlertsPage({ token }: { token: string }) {
       }
     }
 
-    void loadAlerts()
-  }, [])
+    void load()
+    const timer = setInterval(() => void load(), 5000)
+    return () => clearInterval(timer)
+  }, [token, refresh])
+
+  function reload() {
+    setRefresh(count => count + 1)
+  }
 
   const filteredAlerts = alerts.filter(alert => {
     const matchesSeverity = filter === 'All' || alert.severity === filter
@@ -98,16 +84,39 @@ function AlertsPage({ token }: { token: string }) {
     return matchesSeverity && matchesSearch
   })
 
-  function toggleReviewed(id: string) {
-    setReviewed(previous =>
-      previous.includes(id)
-        ? previous.filter(item => item !== id)
-        : [...previous, id]
-    )
+  async function changeStatus(alert: Alert, status: string) {
+    setBusy(true)
+    try {
+      await api(token, `/alerts/${alert.id}`, { method: 'PATCH', body: { status } })
+      setNotice(`Alert ${alert.id} is now ${status}.`)
+      setSelected(null)
+      reload()
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : 'Could not update the alert.')
+    } finally {
+      setBusy(false)
+    }
   }
 
-  function currentStatus(alert: Alert) {
-    return reviewed.includes(alert.id) ? 'Reviewed' : alert.status
+  async function openCase(alert: Alert) {
+    setBusy(true)
+    try {
+      const created = await api<{ id: number }>(token, '/cases', {
+        method: 'POST',
+        body: { alert_id: Number(alert.id), title: `${alert.title} - ${alert.device}` },
+      })
+      setNotice(`Case ${created.id} opened for alert ${alert.id}.`)
+      setSelected(null)
+      reload()
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : 'Could not open a case.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  function statusClass(alert: Alert) {
+    return alert.rawStatus === 'closed' ? 'status-reviewed' : 'status-open'
   }
 
   return (
@@ -143,6 +152,12 @@ function AlertsPage({ token }: { token: string }) {
         </select>
       </div>
 
+      {notice && (
+        <p className="alerts-notice" role="status">
+          {notice}
+        </p>
+      )}
+
       <div className="alerts-table-wrapper">
         <table className="security-alerts-table">
           <thead>
@@ -172,13 +187,9 @@ function AlertsPage({ token }: { token: string }) {
                 <td>{alert.time}</td>
                 <td>
                   <span
-                    className={
-                      currentStatus(alert) === 'Reviewed'
-                        ? 'status-reviewed'
-                        : 'status-open'
-                    }
+                    className={statusClass(alert)}
                   >
-                    {currentStatus(alert)}
+                    {alert.status}
                   </span>
                 </td>
                 <td>
@@ -226,21 +237,25 @@ function AlertsPage({ token }: { token: string }) {
               <dt>Severity</dt><dd>{selected.severity}</dd>
               <dt>Device / source</dt><dd>{selected.device}</dd>
               <dt>Time</dt><dd>{selected.time}</dd>
-              <dt>Status</dt><dd>{currentStatus(selected)}</dd>
+              <dt>Status</dt><dd>{selected.status}</dd>
             </dl>
 
             <div className="alert-detail-actions">
               <button onClick={() => setSelected(null)}>Close</button>
-              <button
-                onClick={() => {
-                  toggleReviewed(selected.id)
-                  setSelected(null)
-                }}
-              >
-                {reviewed.includes(selected.id)
-                  ? 'Mark as Open'
-                  : 'Mark as Reviewed'}
-              </button>
+              {selected.rawStatus !== 'closed' && (
+                <button disabled={busy} onClick={() => void openCase(selected)}>
+                  Open case
+                </button>
+              )}
+              {(NEXT_STATUS[selected.rawStatus] ?? []).map(([status, label]) => (
+                <button
+                  key={status}
+                  disabled={busy}
+                  onClick={() => void changeStatus(selected, status)}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
           </div>
         </div>
